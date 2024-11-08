@@ -50,5 +50,5 @@ spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/social_media_app_post
     username: postgres
-    password: 101119
+    password: admin123
     driver-class-name: org.postgresql.Driver
