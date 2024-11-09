@@ -4,5 +4,6 @@ public enum ChannelMessageType {
     LIKE,
     SHARE,
     COMMENT,
-    FRIEND_REQUEST
+    FRIEND_REQUEST,
+    ACCEPT_FRIEND_REQUEST
 }
