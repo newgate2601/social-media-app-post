@@ -1,5 +1,7 @@
 package com.example.social_media_app_post.repository;
 
+import com.example.social_media_app_post.common.Common;
+import com.example.social_media_app_post.entity.PostEntity;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Repository;
 
@@ -7,7 +9,7 @@ import org.springframework.stereotype.Repository;
 @AllArgsConstructor
 public class CustomRepository {
 //    private final CommentMapRepository commentMapRepository;
-//    private final PostRepository postRepository;
+    private final PostRepository postRepository;
 //    private final GroupRepository groupRepository;
 //    private final TagRepository tagRepository;
 //
@@ -17,11 +19,11 @@ public class CustomRepository {
 //        );
 //    }
 //
-//    public PostEntity getPost(Long postId){
-//        return postRepository.findById(postId).orElseThrow(
-//                () -> new RuntimeException(Common.RECORD_NOT_FOUND)
-//        );
-//    }
+    public PostEntity getPost(Long postId){
+        return postRepository.findById(postId).orElseThrow(
+                () -> new RuntimeException(Common.RECORD_NOT_FOUND)
+        );
+    }
 //
 //
 //    public GroupEntity getGroup(Long groupId){

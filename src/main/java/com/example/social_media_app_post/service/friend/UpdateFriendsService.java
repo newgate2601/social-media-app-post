@@ -1,4 +1,4 @@
-package com.example.social_media_app_post.service;
+package com.example.social_media_app_post.service.friend;
 
 import com.example.social_media_app_post.common.Common;
 import com.example.social_media_app_post.common.enums.ChannelMessageType;
