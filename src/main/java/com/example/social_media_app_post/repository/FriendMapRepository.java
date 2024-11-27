@@ -22,4 +22,6 @@ public interface FriendMapRepository extends JpaRepository<FriendMapEntity, Long
     FriendMapEntity findByUserId1AndUserId2(Long userId, Long friendId);
 
     void deleteAllByUserId1AndUserId2(Long userId1, Long userId2);
+    long countByUserId1OrUserId2(Long userId1, Long userId2);
+    List<FriendMapEntity> findByUserId1OrUserId2(Long userId, Long otherUserId);
 }

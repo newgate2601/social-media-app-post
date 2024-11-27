@@ -22,10 +22,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -45,6 +42,11 @@ public class GetFriendsService {
         Long userId = tokenHelper.getUserIdFromToken(accessToken);
         UserDto userEntity = uaaServiceProxy.getUsersBy(List.of(userId)).getFirst();
         FriendInforOutput friendInforOutput = friendMapper.getFriendInforFromEntity(userEntity);
+
+        Map<String, Long> friendStats = getFriendStats(checkId, userId);
+        friendInforOutput.setTotalFriends(friendStats.getOrDefault("numberOfFriends", 0L));
+        friendInforOutput.setMutualFriends(friendStats.getOrDefault("commonFriends", 0L));
+
         if(Objects.nonNull(friendMapRepository.findByUserId1AndUserId2(userId,checkId))){
             ChatDto chatEntity = rtcServiceProxy.getChatBy(userId,checkId);
             friendInforOutput.setState(Common.FRIEND);
@@ -158,5 +160,38 @@ public class GetFriendsService {
                 }
         );
     }
+    @Transactional(readOnly = true)
+    public Map<String, Long> getFriendStats(Long checkId, Long userId) {
+
+        Map<String, Long> result = new HashMap<>();
+
+        long numberOfFriends = friendMapRepository.countByUserId1OrUserId2(checkId, checkId);
+        result.put("numberOfFriends", numberOfFriends);
+
+        if (userId != null) {
+
+            Set<Long> user1Friends = friendMapRepository
+                    .findByUserId1OrUserId2(checkId, checkId)
+                    .stream()
+                    .map(friend -> friend.getUserId1().equals(checkId) ? friend.getUserId2() : friend.getUserId1())
+                    .collect(Collectors.toSet());
+
+
+            long commonFriends = friendMapRepository
+                    .findByUserId1OrUserId2(userId, userId)
+                    .stream()
+                    .map(friend -> friend.getUserId1().equals(userId) ? friend.getUserId2() : friend.getUserId1())
+                    .filter(user1Friends::contains)
+                    .count();
+            result.put("commonFriends", commonFriends);
+
+        } else {
+            result.put("commonFriends", 0L);
+        }
+
+        return result;
+    }
+
+
 
 }

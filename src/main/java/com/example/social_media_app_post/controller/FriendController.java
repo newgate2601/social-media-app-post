@@ -10,7 +10,10 @@ import lombok.AllArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("api/v1/friend")
@@ -79,4 +82,14 @@ public class FriendController {
     void rejectAddFriendRequest(@RequestParam Long senderId, @RequestHeader("Authorization") String accessToken){
         updateFriendsService.rejectAddFriendRequest(senderId, accessToken);
     }
+
+//    @Operation(summary = "test function get number of common friends")
+//    @GetMapping("/stats")
+//    public ResponseEntity<Map<String, Long>> getFriendStats(
+//            @RequestParam Long checkId,
+//            @RequestParam(required = false) Long userId) {
+//
+//        Map<String, Long> stats = getFriendService.getFriendStats(checkId, userId);
+//        return ResponseEntity.ok(stats);
+//    }
 }
