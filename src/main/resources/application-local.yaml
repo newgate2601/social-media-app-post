@@ -16,9 +16,9 @@ management:
 
 eureka:
   client:
-    enabled: true
+    enabled: false
     service-url:
-      defaultZone: http://registry:8761/eureka/
+      defaultZone: http://localhost:8761/eureka/
 
 spring:
   servlet:
@@ -53,7 +53,7 @@ spring:
       hibernate.format_sql: true
 
   datasource:
-    url: jdbc:postgresql://post-db:5432/social_media_app_post
+    url: jdbc:postgresql://localhost:5432/social_media_app_post
     username: postgres
     password: 101119
     driver-class-name: org.postgresql.Driver

@@ -1,7 +1,9 @@
 package com.example.social_media_app_post.controller;
 
+import com.example.social_media_app_post.common.Common;
 import com.example.social_media_app_post.dto.friend.FriendInforOutput;
 import com.example.social_media_app_post.dto.friend.FriendRequestOutput;
+import com.example.social_media_app_post.dto.friend.FriendSearchingOutput;
 import com.example.social_media_app_post.dto.friend.UserOutput;
 import com.example.social_media_app_post.service.friend.GetFriendsService;
 import com.example.social_media_app_post.service.friend.UpdateFriendsService;
@@ -18,10 +20,17 @@ import java.util.Map;
 @RestController
 @RequestMapping("api/v1/friend")
 @AllArgsConstructor
-@CrossOrigin
 public class FriendController {
     private final UpdateFriendsService updateFriendsService;
     private final GetFriendsService getFriendService;
+
+    @Operation(summary = "Tìm danh sách người dùng trên app")
+    @GetMapping("/all-user/list")
+    public Page<FriendSearchingOutput> findUsers(@RequestParam(required = false) String search,
+                                                 @RequestHeader(value = Common.AUTHORIZATION) String accessToken,
+                                                 @ParameterObject Pageable pageable){
+        return getFriendService.findUsers(search, accessToken, pageable);
+    }
 
     @Operation(summary = "Hủy lời mời kết bạn bên phía người gửi")
     @DeleteMapping("/delete-request/user")

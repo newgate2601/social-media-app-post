@@ -2,18 +2,20 @@ package com.example.social_media_app_post.service.post;
 
 import com.example.social_media_app_post.common.Common;
 import com.example.social_media_app_post.common.StringUtils;
+import com.example.social_media_app_post.common.enums.ChannelMessageType;
 import com.example.social_media_app_post.dto.post.CreatePostInput;
 import com.example.social_media_app_post.entity.NotificationEntity;
 import com.example.social_media_app_post.entity.PostEntity;
 import com.example.social_media_app_post.feign.dto.EventNotificationRequest;
 import com.example.social_media_app_post.feign.impl.RtcServiceProxy;
+import com.example.social_media_app_post.redis.RedisMessagePublisher;
+import com.example.social_media_app_post.redis.dto.MessageInput;
 import com.example.social_media_app_post.repository.*;
 import com.example.social_media_app_post.security.TokenHelper;
 import com.example.social_media_app_post.service.mapper.PostMapper;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -29,13 +31,14 @@ public class UpdatePostService {
     private final TokenHelper tokenHelper;
     private final NotificationRepository notificationRepository;
     private final RtcServiceProxy rtcServiceProxy;
+    private final RedisMessagePublisher publisher;
 
     @Transactional
     public void creatPost(String accessToken,
                           CreatePostInput createPostInput) {
         Long userId = tokenHelper.getUserIdFromToken(accessToken);
         PostEntity postEntity = postMapper.getEntityFromInput(createPostInput);
-        if (Objects.nonNull(createPostInput.getImageUrls()) && createPostInput.getImageUrls().isEmpty()) {
+        if (Objects.nonNull(createPostInput.getImageUrls()) && !createPostInput.getImageUrls().isEmpty()) {
             postEntity.setImageUrlsString(StringUtils.convertListToString(createPostInput.getImageUrls()));
         }
         postEntity.setUserId(userId);
@@ -102,6 +105,16 @@ public class UpdatePostService {
                     EventNotificationRequest.builder()
                             .userId(postEntity.getUserId())
                             .eventType(Common.NOTIFICATION)
+                            .build()
+            );
+            publisher.publish(
+                    String.valueOf(postEntity.getUserId()) ,
+                    MessageInput.builder()
+                            .receiverId(String.valueOf(postEntity.getUserId()))
+                            .fullName(tokenHelper.getFullNameFromToken(accessToken))
+                            .imageUrl(tokenHelper.getImageUrlFromToken(accessToken))
+                            .userId(tokenHelper.getUserIdFromToken(accessToken))
+                            .type(ChannelMessageType.SHARE.name())
                             .build()
             );
         });

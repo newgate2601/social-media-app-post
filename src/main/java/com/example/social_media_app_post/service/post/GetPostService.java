@@ -57,7 +57,7 @@ public class GetPostService {
         friendIds = friendIds.stream().filter(id -> !id.equals(userId)).collect(Collectors.toSet());
 
         Page<PostEntity> postEntitiesOfFriends =
-                postRepository.findAllByUserIdInAndState(friendIds, Common.PUBLIC, pageable);
+                postRepository.findAllByUserIdIn(friendIds, pageable);
         if (Objects.isNull(postEntitiesOfFriends) || postEntitiesOfFriends.isEmpty()) {
             return Page.empty();
         }
@@ -71,15 +71,26 @@ public class GetPostService {
     }
 
     @Transactional(readOnly = true)
-    public Page<PostOutput> getPostsByUserId(Long userId, String accessToken, Pageable pageable){
-        Page<PostEntity> postEntityPage = postRepository.findAllByUserIdAndState(userId, Common.PUBLIC, pageable);
+    public Page<PostOutput> getPostsByUserId(Long searchUserId, String accessToken, Pageable pageable){
+        Long userId = tokenHelper.getUserIdFromToken(accessToken);
+        List<String> states = new ArrayList<>(List.of(Common.PUBLIC));
+
+        if (Objects.isNull(searchUserId)) {
+            searchUserId = userId;
+            states.add(Common.PRIVATE);
+        } else if (friendMapRepository.existsByUserId1AndUserId2(userId, searchUserId)
+                || friendMapRepository.existsByUserId1AndUserId2(searchUserId, userId)) {
+            states.add(Common.PRIVATE);
+        }
+
+        Page<PostEntity> postEntityPage = postRepository.findAllByUserIdAndStateIn(searchUserId, states, pageable);
         if (Objects.isNull(postEntityPage) || postEntityPage.isEmpty()) {
             return Page.empty();
         }
-        UserDto userEntity = uaaServiceProxy.getUsersBy(List.of(userId)).getFirst();
+        UserDto userEntity = uaaServiceProxy.getUsersBy(List.of(searchUserId)).getFirst();
         Map<Long, UserDto> userEntityMap = new HashMap<>();
         userEntityMap.put(userEntity.getId(), userEntity);
-        return setHasLikeForPosts(tokenHelper.getUserIdFromToken(accessToken), mapResponsePostPage(postEntityPage, userEntityMap));
+        return setHasLikeForPosts(userId, mapResponsePostPage(postEntityPage, userEntityMap));
     }
 
     @Transactional(readOnly = true)

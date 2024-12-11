@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import java.util.Collection;
 import java.util.List;
 
 @Component
@@ -17,13 +18,17 @@ import java.util.List;
 public class UaaServiceProxy {
     private final UaaServiceClient uaaServiceClient;
 
+    public Page<UserDto> getUsers2By(String search, List<Long> notIds, Pageable pageable) {
+        return uaaServiceClient.getUsers2By(search, notIds, pageable);
+    }
+
     public Page<UserDto> getUsersBy(String search,
                                     List<Long> ids,
                                     Pageable pageable) {
         return uaaServiceClient.getUsersBy(search, ids, pageable);
     }
 
-    public List<UserDto> getUsersBy(@RequestParam List<Long> ids) {
+    public List<UserDto> getUsersBy(@RequestParam Collection<Long> ids) {
         List<UserDto> users = uaaServiceClient.getUsersBy(ids);
         return users;
     }
