@@ -19,4 +19,5 @@ public interface PostRepository extends JpaRepository<PostEntity, Long> {
     List<PostEntity> findAllByIdIn(List<Long> postIds);
     Page<PostEntity> findAllByUserIdInAndState(Collection<Long> userIds, String state, Pageable pageable);
     Page<PostEntity> findAllByUserIdIn(Collection<Long> userIds, Pageable pageable);
+
 }

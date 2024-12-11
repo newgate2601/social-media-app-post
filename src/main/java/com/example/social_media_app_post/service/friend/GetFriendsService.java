@@ -38,22 +38,22 @@ public class GetFriendsService {
     private final EntityManager entityManager;
 
     @Transactional(readOnly = true)
-    public FriendInforOutput getFriendInformation(String accessToken, Long checkId){
+    public FriendInforOutput getFriendInformation(String accessToken, Long friendId){
         Long userId = tokenHelper.getUserIdFromToken(accessToken);
         UserDto userEntity = uaaServiceProxy.getUsersBy(List.of(userId)).getFirst();
         FriendInforOutput friendInforOutput = friendMapper.getFriendInforFromEntity(userEntity);
 
-        Map<String, Long> friendStats = getFriendStats(checkId, userId);
+        Map<String, Long> friendStats = getFriendStats(friendId, userId);
         friendInforOutput.setTotalFriends(friendStats.getOrDefault("numberOfFriends", 0L));
         friendInforOutput.setMutualFriends(friendStats.getOrDefault("commonFriends", 0L));
 
-        if(Objects.nonNull(friendMapRepository.findByUserId1AndUserId2(userId,checkId))){
-            ChatDto chatEntity = rtcServiceProxy.getChatBy(userId,checkId);
+        if(Objects.nonNull(friendMapRepository.findByUserId1AndUserId2(userId,friendId))){
+            ChatDto chatEntity = rtcServiceProxy.getChatBy(userId,friendId);
             friendInforOutput.setState(Common.FRIEND);
             friendInforOutput.setChatId(chatEntity.getId());
         }else{
-            if(Boolean.TRUE.equals(friendRequestRepository.existsBySenderIdAndReceiverId(userId,checkId))
-                    || Boolean.TRUE.equals(friendRequestRepository.existsBySenderIdAndReceiverId(checkId,userId)) ){
+            if(Boolean.TRUE.equals(friendRequestRepository.existsBySenderIdAndReceiverId(userId,friendId))
+                    || Boolean.TRUE.equals(friendRequestRepository.existsBySenderIdAndReceiverId(friendId,userId)) ){
                 friendInforOutput.setState(Common.REQUESTING);
                 friendInforOutput.setChatId(null);
             }else{
@@ -167,7 +167,6 @@ public class GetFriendsService {
 
         long numberOfFriends = friendMapRepository.countByUserId1OrUserId2(checkId, checkId);
         result.put("numberOfFriends", numberOfFriends);
-
         if (userId != null) {
 
             Set<Long> user1Friends = friendMapRepository
@@ -175,8 +174,6 @@ public class GetFriendsService {
                     .stream()
                     .map(friend -> friend.getUserId1().equals(checkId) ? friend.getUserId2() : friend.getUserId1())
                     .collect(Collectors.toSet());
-
-
             long commonFriends = friendMapRepository
                     .findByUserId1OrUserId2(userId, userId)
                     .stream()
@@ -184,7 +181,6 @@ public class GetFriendsService {
                     .filter(user1Friends::contains)
                     .count();
             result.put("commonFriends", commonFriends);
-
         } else {
             result.put("commonFriends", 0L);
         }

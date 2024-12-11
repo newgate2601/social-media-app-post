@@ -6,10 +6,12 @@ import com.example.social_media_app_post.dto.post.PostOutput;
 import com.example.social_media_app_post.entity.FriendMapEntity;
 import com.example.social_media_app_post.entity.LikeMapEntity;
 import com.example.social_media_app_post.entity.PostEntity;
+import com.example.social_media_app_post.entity.PostImageMapEntity;
 import com.example.social_media_app_post.feign.dto.UserDto;
 import com.example.social_media_app_post.feign.impl.UaaServiceProxy;
 import com.example.social_media_app_post.repository.FriendMapRepository;
 import com.example.social_media_app_post.repository.LikeMapRepository;
+import com.example.social_media_app_post.repository.PostImageMapRepository;
 import com.example.social_media_app_post.repository.PostRepository;
 import com.example.social_media_app_post.security.TokenHelper;
 import com.example.social_media_app_post.service.mapper.PostMapper;
@@ -32,6 +34,7 @@ public class GetPostService {
     private final UaaServiceProxy uaaServiceProxy;
     private final LikeMapRepository likeMapRepository;
     private final PostMapper postMapper;
+    private final PostImageMapRepository postImageMapRepository;
 
     @Transactional(readOnly = true)
     public Page<PostOutput> getPostOfListFriend(String accessToken, Long friendId, Pageable pageable){
@@ -104,6 +107,16 @@ public class GetPostService {
         Map<Long, UserDto> userEntityMap = new HashMap<>();
         userEntityMap.put(userEntity.getId(), userEntity);
         return setHasLikeForPosts(userId, mapResponsePostPage(postEntityPage, userEntityMap));
+    }
+
+    @Transactional(readOnly = true)
+    public Page<PostImageMapEntity> getImagesOfPost(String accessToken, Long userId, Pageable pageable){
+        Long currentUserId = tokenHelper.getUserIdFromToken(accessToken);
+        if(userId == null){
+            userId = currentUserId;
+        }
+        Page<PostImageMapEntity> postImageMapEntityPage = postImageMapRepository.findAllByUserId(userId,pageable);
+        return postImageMapEntityPage;
     }
 
     public Page<PostOutput> mapResponsePostPage(Page<PostEntity> postEntityPage, Map<Long, UserDto> userEntityMap) {

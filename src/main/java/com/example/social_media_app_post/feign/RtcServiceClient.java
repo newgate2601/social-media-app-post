@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.*;
 
 @FeignClient("RTC-SERVICE")
 //@FeignClient(url = "localhost:8087", name = "RTC-SERVICE")
+@FeignClient("RTC-SERVICE")
+//@FeignClient(url = "localhost:8086", name = "RTC-SERVICE")
 public interface RtcServiceClient {
     @DeleteMapping(value = "/api/v1/event-notification", produces = "application/json")
     void deleteAllEventNotificationByType(@RequestParam Long userId,
