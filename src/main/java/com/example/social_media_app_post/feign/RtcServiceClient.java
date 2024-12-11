@@ -9,8 +9,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 
-//@FeignClient("RTC-SERVICE")
-@FeignClient(url = "localhost:8086", name = "RTC-SERVICE")
+@FeignClient("RTC-SERVICE")
+//@FeignClient(url = "localhost:8086", name = "RTC-SERVICE")
 public interface RtcServiceClient {
     @GetMapping(value = "/api/v1/chat/detail")
     ChatDto getChatBy(@RequestParam Long userId1, @RequestParam Long userId2);

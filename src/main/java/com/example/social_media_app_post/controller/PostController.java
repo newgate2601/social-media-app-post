@@ -2,6 +2,7 @@ package com.example.social_media_app_post.controller;
 
 import com.example.social_media_app_post.dto.post.CreatePostInput;
 import com.example.social_media_app_post.dto.post.PostOutput;
+import com.example.social_media_app_post.entity.PostImageMapEntity;
 import com.example.social_media_app_post.service.post.GetPostService;
 import com.example.social_media_app_post.service.post.UpdatePostService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -78,4 +79,14 @@ public class PostController {
                                       @ParameterObject Pageable pageable){
         return getPostService.getMyPosts(accessToken, pageable);
     }
+
+    @Operation(summary = "Danh sách ảnh của người dùng ")
+    @GetMapping("/group-images")
+    public Page<PostImageMapEntity> getGroupPosts(
+            @RequestHeader("Authorization") String accessToken,
+            @RequestParam(required = false) Long userId,
+            @ParameterObject Pageable pageable){
+        return getPostService.getImagesOfPost(accessToken, userId, pageable);
+    }
 }
+
