@@ -62,6 +62,7 @@ public class GroupService {
         groupOutputAndTag.setName(groupEntity.getName());
         groupOutputAndTag.setMemberCount(groupEntity.getMemberCount());
         groupOutputAndTag.setTagList(tagName);
+        groupOutputAndTag.setImageUrl(groupEntity.getImageUrl());
         return groupOutputAndTag;
     }
 

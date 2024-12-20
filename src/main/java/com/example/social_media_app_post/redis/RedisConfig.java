@@ -16,12 +16,8 @@ public class RedisConfig {
     public RedisTemplate<String, MessageInput> messageInputRedisTemplate(RedisConnectionFactory connectionFactory) {
         RedisTemplate<String, MessageInput> template = new RedisTemplate<>();
         template.setConnectionFactory(connectionFactory);
-
-        // Set the key serializer
         template.setKeySerializer(new StringRedisSerializer());
-        // Set the value serializer
         template.setValueSerializer(new GenericJackson2JsonRedisSerializer());
-
         return template;
     }
 

@@ -5,8 +5,10 @@ import com.example.social_media_app_post.common.enums.ChannelMessageType;
 import com.example.social_media_app_post.entity.FriendMapEntity;
 import com.example.social_media_app_post.entity.NotificationEntity;
 import com.example.social_media_app_post.entity.friend.FriendRequestEntity;
+import com.example.social_media_app_post.feign.PushServiceClient;
 import com.example.social_media_app_post.feign.dto.CreateChatForUserDto;
 import com.example.social_media_app_post.feign.dto.EventNotificationRequest;
+import com.example.social_media_app_post.feign.dto.PushMessage;
 import com.example.social_media_app_post.feign.dto.UserDto;
 import com.example.social_media_app_post.feign.impl.RtcServiceProxy;
 import com.example.social_media_app_post.feign.impl.UaaServiceProxy;
@@ -21,7 +23,9 @@ import jakarta.persistence.EntityManager;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -44,6 +48,7 @@ public class UpdateFriendsService {
     private final RtcServiceProxy rtcServiceProxy;
     private final RedisMessagePublisher publisher;
     private final UaaServiceProxy uaaServiceProxy;
+    private final PushServiceClient pushService;
 
     @Transactional
     public void rejectAddFriendRequest(Long sendId, String token) {
@@ -60,9 +65,9 @@ public class UpdateFriendsService {
     }
 
     @Transactional
-    public void deleteSendFriendRequest(String accessToken, Long receiverId){
+    public void deleteSendFriendRequest(String accessToken, Long receiverId) {
         Long userId = tokenHelper.getUserIdFromToken(accessToken);
-        if(Boolean.FALSE.equals(friendRequestRepository.existsBySenderIdAndReceiverId(userId,receiverId))){
+        if (Boolean.FALSE.equals(friendRequestRepository.existsBySenderIdAndReceiverId(userId, receiverId))) {
             throw new RuntimeException(Common.RECORD_NOT_FOUND);
         }
         friendRequestRepository.deleteByReceiverIdAndSenderId(receiverId, userId);
@@ -98,13 +103,22 @@ public class UpdateFriendsService {
                             .build()
             );
             publisher.publish(
-                    String.valueOf(receiveId) ,
+                    String.valueOf(receiveId),
                     MessageInput.builder()
                             .receiverId(String.valueOf(receiveId))
                             .fullName(tokenHelper.getFullNameFromToken(accessToken))
                             .imageUrl(tokenHelper.getImageUrlFromToken(accessToken))
                             .userId(tokenHelper.getUserIdFromToken(accessToken))
                             .type(ChannelMessageType.FRIEND_REQUEST.name())
+                            .build()
+            );
+            pushService.sendMessageToAllDevices(
+                    receiveId, PushMessage.builder()
+                            .type(ChannelMessageType.FRIEND_REQUEST.name())
+                            .createdAt(OffsetDateTime.now())
+                            .fullName(tokenHelper.getFullNameFromToken(accessToken))
+                            .imageUrl(tokenHelper.getImageUrlFromToken(accessToken))
+                            .userId(tokenHelper.getUserIdFromToken(accessToken))
                             .build()
             );
         });
@@ -133,7 +147,7 @@ public class UpdateFriendsService {
 
         CompletableFuture.runAsync(() -> {
             publisher.publish(
-                    String.valueOf(senderId) ,
+                    String.valueOf(senderId),
                     MessageInput.builder()
                             .receiverId(String.valueOf(senderId))
                             .fullName(tokenHelper.getFullNameFromToken(token))
@@ -142,7 +156,6 @@ public class UpdateFriendsService {
                             .type(ChannelMessageType.ACCEPT_FRIEND_REQUEST.name())
                             .build()
             );
-
             rtcServiceProxy.createEventNotification(
                     EventNotificationRequest.builder()
                             .userId(senderId)
@@ -158,6 +171,16 @@ public class UpdateFriendsService {
                             .receiverId(receiver.getId())
                             .receiverFullName(receiver.getFullName())
                             .receiverImageUrl(receiver.getImageUrl())
+                            .build()
+            );
+
+            pushService.sendMessageToAllDevices(
+                    senderId, PushMessage.builder()
+                            .type(ChannelMessageType.ACCEPT_FRIEND_REQUEST.name())
+                            .createdAt(OffsetDateTime.now())
+                            .fullName(tokenHelper.getFullNameFromToken(token))
+                            .imageUrl(tokenHelper.getImageUrlFromToken(token))
+                            .userId(tokenHelper.getUserIdFromToken(token))
                             .build()
             );
         });

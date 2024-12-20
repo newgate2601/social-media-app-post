@@ -82,6 +82,7 @@ public class PostGroupService {
             throw new RuntimeException(Common.ACTION_FAIL);
         }
         postMapper.updateEntityFromInput(postEntity, updatePostInputFile);
+        postEntity.setImageUrlsString(null);
         if (Objects.nonNull(updatePostInputFile.getImageUrls()) && !updatePostInputFile.getImageUrls().isEmpty()){
             postEntity.setImageUrlsString(StringUtils.convertListToString(updatePostInputFile.getImageUrls()));
         }

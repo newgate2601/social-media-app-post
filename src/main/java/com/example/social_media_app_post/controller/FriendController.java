@@ -91,14 +91,4 @@ public class FriendController {
     void rejectAddFriendRequest(@RequestParam Long senderId, @RequestHeader("Authorization") String accessToken){
         updateFriendsService.rejectAddFriendRequest(senderId, accessToken);
     }
-
-//    @Operation(summary = "test function get number of common friends")
-//    @GetMapping("/stats")
-//    public ResponseEntity<Map<String, Long>> getFriendStats(
-//            @RequestParam Long checkId,
-//            @RequestParam(required = false) Long userId) {
-//
-//        Map<String, Long> stats = getFriendService.getFriendStats(checkId, userId);
-//        return ResponseEntity.ok(stats);
-//    }
 }

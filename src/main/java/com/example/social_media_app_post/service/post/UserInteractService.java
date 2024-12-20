@@ -10,7 +10,9 @@ import com.example.social_media_app_post.entity.CommentMapEntity;
 import com.example.social_media_app_post.entity.LikeMapEntity;
 import com.example.social_media_app_post.entity.NotificationEntity;
 import com.example.social_media_app_post.entity.PostEntity;
+import com.example.social_media_app_post.feign.PushServiceClient;
 import com.example.social_media_app_post.feign.dto.EventNotificationRequest;
+import com.example.social_media_app_post.feign.dto.PushMessage;
 import com.example.social_media_app_post.feign.dto.UserDto;
 import com.example.social_media_app_post.feign.impl.RtcServiceProxy;
 import com.example.social_media_app_post.feign.impl.UaaServiceProxy;
@@ -26,6 +28,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -47,6 +50,7 @@ public class UserInteractService {
     private final UaaServiceProxy uaaServiceProxy;
     private final PostMapper postMapper;
     private final RedisMessagePublisher publisher;
+    private final PushServiceClient pushService;
 
     @Transactional
     public void like(Long postId, String accessToken) {
@@ -64,6 +68,15 @@ public class UserInteractService {
                             .imageUrl(tokenHelper.getImageUrlFromToken(accessToken))
                             .userId(tokenHelper.getUserIdFromToken(accessToken))
                             .type(ChannelMessageType.LIKE.name())
+                            .build()
+            );
+            pushService.sendMessageToAllDevices(
+                    postEntity.getUserId(), PushMessage.builder()
+                            .type(ChannelMessageType.LIKE.name())
+                            .createdAt(OffsetDateTime.now())
+                            .fullName(tokenHelper.getFullNameFromToken(accessToken))
+                            .imageUrl(tokenHelper.getImageUrlFromToken(accessToken))
+                            .userId(tokenHelper.getUserIdFromToken(accessToken))
                             .build()
             );
             notificationRepository.save(
@@ -119,6 +132,15 @@ public class UserInteractService {
                             .imageUrl(tokenHelper.getImageUrlFromToken(accessToken))
                             .userId(tokenHelper.getUserIdFromToken(accessToken))
                             .type(ChannelMessageType.COMMENT.name())
+                            .build()
+            );
+            pushService.sendMessageToAllDevices(
+                    postEntity.getUserId(), PushMessage.builder()
+                            .type(ChannelMessageType.COMMENT.name())
+                            .createdAt(OffsetDateTime.now())
+                            .fullName(tokenHelper.getFullNameFromToken(accessToken))
+                            .imageUrl(tokenHelper.getImageUrlFromToken(accessToken))
+                            .userId(tokenHelper.getUserIdFromToken(accessToken))
                             .build()
             );
             notificationRepository.save(

@@ -61,6 +61,7 @@ public class UpdatePostService {
             throw new RuntimeException(Common.ACTION_FAIL);
         }
         postMapper.updateEntityFromInput(postEntity, updatePostInput);
+        postEntity.setImageUrlsString(null);
         if (Objects.nonNull(updatePostInput.getImageUrls()) && !updatePostInput.getImageUrls().isEmpty()){
             postEntity.setImageUrlsString(StringUtils.convertListToString(updatePostInput.getImageUrls()));
         }

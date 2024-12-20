@@ -11,7 +11,6 @@ import org.springframework.stereotype.Service;
 @AllArgsConstructor
 public class RedisMessagePublisher {
     private final RedisTemplate<String, MessageInput> messageInputRedisTemplate;
-
     // user_id = channel_name
     public void publish(String channelName, MessageInput messageInput) {
         messageInputRedisTemplate.convertAndSend(channelName, messageInput);
