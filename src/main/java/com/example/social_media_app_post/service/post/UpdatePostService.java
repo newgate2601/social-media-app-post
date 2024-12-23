@@ -5,6 +5,7 @@ import com.example.social_media_app_post.common.StringUtils;
 import com.example.social_media_app_post.dto.post.CreatePostInput;
 import com.example.social_media_app_post.entity.NotificationEntity;
 import com.example.social_media_app_post.entity.PostEntity;
+import com.example.social_media_app_post.entity.PostImageMapEntity;
 import com.example.social_media_app_post.feign.dto.EventNotificationRequest;
 import com.example.social_media_app_post.feign.impl.RtcServiceProxy;
 import com.example.social_media_app_post.repository.*;
@@ -23,19 +24,18 @@ import java.util.concurrent.CompletableFuture;
 public class UpdatePostService {
     private final PostMapper postMapper;
     private final PostRepository postRepository;
-    private final LikeMapRepository likeMapRepository;
-    private final FriendMapRepository friendMapRepository;
+    private final PostImageMapRepository postImageMapRepository;
     private final CustomRepository customRepository;
     private final TokenHelper tokenHelper;
     private final NotificationRepository notificationRepository;
     private final RtcServiceProxy rtcServiceProxy;
 
     @Transactional
-    public void creatPost(String accessToken,
+    public void createPost(String accessToken,
                           CreatePostInput createPostInput) {
         Long userId = tokenHelper.getUserIdFromToken(accessToken);
         PostEntity postEntity = postMapper.getEntityFromInput(createPostInput);
-        if (Objects.nonNull(createPostInput.getImageUrls()) && createPostInput.getImageUrls().isEmpty()) {
+        if (Objects.nonNull(createPostInput.getImageUrls()) && !createPostInput.getImageUrls().isEmpty()) {
             postEntity.setImageUrlsString(StringUtils.convertListToString(createPostInput.getImageUrls()));
         }
         postEntity.setUserId(userId);
@@ -45,7 +45,19 @@ public class UpdatePostService {
         postEntity.setCreatedAt(LocalDateTime.now());
         postEntity.setType(Common.USER);
         postEntity.setGroupId(null);
-        postRepository.save(postEntity);
+        PostEntity savedPostEntity = postRepository.save(postEntity);
+        if (Objects.nonNull(createPostInput.getImageUrls()) && !createPostInput.getImageUrls().isEmpty()) {
+            for (String imageUrl : createPostInput.getImageUrls()) {
+                PostImageMapEntity postImageMapEntity = new PostImageMapEntity();
+                postImageMapEntity.setPostId(savedPostEntity.getId());
+                postImageMapEntity.setUserId(userId);
+                postImageMapEntity.setImageUrl(imageUrl);
+                postImageMapEntity.setState(postEntity.getState());
+                postImageMapEntity.setCreatedAt(LocalDateTime.now());
+
+                postImageMapRepository.save(postImageMapEntity);
+            }
+        }
     }
 
     @Transactional
