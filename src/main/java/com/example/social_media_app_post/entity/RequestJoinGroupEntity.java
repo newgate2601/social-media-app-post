@@ -3,18 +3,19 @@ package com.example.social_media_app_post.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
-@AllArgsConstructor
-@NoArgsConstructor
 @Getter
 @Setter
-@Table(name ="tbl_user_group_map")
+@AllArgsConstructor
+@NoArgsConstructor
 @Entity
 @Builder
-public class UserGroupMapEntity {
+@Table(name = "tbl_request_join_group")
+public class RequestJoinGroupEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private Long groupId;
+    private String fullName;
+    private String imageUrl;
     private Long userId;
-    private String role;
+    private Long groupId;
 }

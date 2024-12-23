@@ -13,10 +13,12 @@ import java.util.List;
 public interface UserGroupMapRepository extends JpaRepository<com.example.social_media_app_post.entity.UserGroupMapEntity, Long> {
     void deleteAllByUserIdAndGroupId(Long userId, Long groupId);
     Boolean existsByUserIdInAndGroupId(Collection<Long> userIds, Long groupId);
+    List<UserGroupMapEntity> findAllByUserId(Long userId);
     Boolean existsByUserIdAndGroupId(Long userId, Long groupId);
     List<UserGroupMapEntity> findAllByGroupId(Long groupId);
     Page<UserGroupMapEntity> findAllByGroupId(Long groupId, Pageable pageable);
     void deleteByUserIdAndGroupId(Long userId,Long groupId);
     Long countByGroupId(Long groupId);
     UserGroupMapEntity findByGroupIdAndRole(Long groupId, String role);
+    List<UserGroupMapEntity> findAllByGroupIdAndUserId(Long groupId, Long userId);
 }

@@ -1,16 +1,16 @@
 package com.example.social_media_app_post.service.group;
 
+import com.example.social_media_app_post.base.filter.Filter;
 import com.example.social_media_app_post.common.Common;
 import com.example.social_media_app_post.dto.group.*;
-import com.example.social_media_app_post.entity.GroupEntity;
-import com.example.social_media_app_post.entity.GroupTagMapEntity;
-import com.example.social_media_app_post.entity.TagEntity;
-import com.example.social_media_app_post.entity.UserGroupMapEntity;
+import com.example.social_media_app_post.entity.*;
+import com.example.social_media_app_post.entity.friend.FriendRequestEntity;
 import com.example.social_media_app_post.feign.dto.UserDto;
 import com.example.social_media_app_post.feign.impl.UaaServiceProxy;
 import com.example.social_media_app_post.repository.*;
 import com.example.social_media_app_post.security.TokenHelper;
 import com.example.social_media_app_post.service.mapper.GroupMapper;
+import jakarta.persistence.EntityManager;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 
 import java.util.*;
 import java.util.function.Function;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 @Service
@@ -36,9 +37,56 @@ public class GroupService {
     private final GroupMapper groupMapper;
     private final TagRepository tagRepository;
     private final TokenHelper tokenHelper;
+    private final EntityManager entityManager;
+    private final RequestJoinGroupRepository requestJoinGroupRepository;
 
     @Transactional
-    public void update(String accessToken, Long id, UpdateGroupInput updateGroupInput){
+    public void acceptJoinGroup(String accessToken, Boolean isAccept, Long groupId, Long userId) {
+        requestJoinGroupRepository.deleteAllByGroupIdAndUserId(groupId, userId);
+        if (Boolean.TRUE.equals(isAccept)) {
+            userGroupMapRepository.save(UserGroupMapEntity.builder()
+                    .groupId(groupId)
+                    .userId(userId)
+                    .role(Common.MEMBER)
+                    .build()
+            );
+        }
+    }
+
+    @Transactional
+    public void requestJoinGroup(String accessToken, Long groupId) {
+        Long userId = tokenHelper.getUserIdFromToken(accessToken);
+        if (userGroupMapRepository.existsByUserIdAndGroupId(userId, groupId)
+                || requestJoinGroupRepository.existsByGroupIdAndUserId(groupId, userId)) {
+            return;
+        }
+        requestJoinGroupRepository.save(RequestJoinGroupEntity.builder()
+                .groupId(groupId)
+                .userId(userId)
+                .fullName(tokenHelper.getFullNameFromToken(accessToken))
+                .imageUrl(tokenHelper.getImageUrlFromToken(accessToken))
+                .build());
+    }
+
+    @Transactional(readOnly = true)
+    public Page<UserDto> getAllRequestJoins(String accessToken, Long groupId, Pageable pageable) {
+        Page<RequestJoinGroupEntity> requestJoinGroupEntities = Filter.builder(RequestJoinGroupEntity.class, entityManager)
+                .filter()
+                .isEqual("groupId", groupId)
+                .getPage(pageable);
+
+        if (requestJoinGroupEntities.isEmpty()) {
+            return new PageImpl<>(Collections.emptyList());
+        }
+        return requestJoinGroupEntities.map(requestJoinGroupEntity -> UserDto.builder()
+                .id(requestJoinGroupEntity.getUserId())
+                .fullName(requestJoinGroupEntity.getFullName())
+                .imageBackground(requestJoinGroupEntity.getImageUrl())
+                .build());
+    }
+
+    @Transactional
+    public void update(String accessToken, Long id, UpdateGroupInput updateGroupInput) {
         GroupEntity groupEntity = groupRepository.findById(id).get();
         groupEntity.setName(updateGroupInput.getName());
         groupEntity.setDescription(updateGroupInput.getDescription());
@@ -47,40 +95,72 @@ public class GroupService {
     }
 
     @Transactional
-    public GroupOutputAndTag getInforGroup(Long groupId){
+    public GroupOutputAndTag getInforGroup(String accessToken,
+                                           Long groupId) {
+        Long userId = tokenHelper.getUserIdFromToken(accessToken);
         GroupEntity groupEntity = groupRepository.findById(groupId).orElseThrow(
                 () -> new RuntimeException(Common.ACTION_FAIL)
         );
-        List<Long> tagIds = groupTagMapRepository.findAllByGroupId(groupId).stream().map(
-                GroupTagMapEntity::getTagId
-        ).collect(Collectors.toList());
-        List<String> tagName = tagRepository.findAllByIdIn(tagIds).stream().map(
-                TagEntity::getName
-        ).collect(Collectors.toList());
+
         GroupOutputAndTag groupOutputAndTag = new GroupOutputAndTag();
         groupOutputAndTag.setIdGroup(groupEntity.getId());
         groupOutputAndTag.setName(groupEntity.getName());
         groupOutputAndTag.setMemberCount(groupEntity.getMemberCount());
-        groupOutputAndTag.setTagList(tagName);
         groupOutputAndTag.setImageUrl(groupEntity.getImageUrl());
+
+        List<UserGroupMapEntity> userGroupMapEntities = userGroupMapRepository.findAllByGroupIdAndUserId(groupId, userId);
+        Boolean requestedJoinGroup = requestJoinGroupRepository.existsByGroupIdAndUserId(groupId, userId);
+        groupOutputAndTag.setIsRequestJoin(requestedJoinGroup);
+        if (Objects.isNull(userGroupMapEntities) || userGroupMapEntities.isEmpty()) {
+            groupOutputAndTag.setIsInGroup(false);
+        } else {
+            UserGroupMapEntity userGroupMapEntity = userGroupMapEntities.getFirst();
+            groupOutputAndTag.setIsInGroup(true);
+            groupOutputAndTag.setRole(userGroupMapEntity.getRole());
+        }
+
         return groupOutputAndTag;
     }
 
     @Transactional(readOnly = true)
-    public Page<GroupOutput> getGroups(String search, Long tagId, Pageable pageable){
-        Page<GroupEntity> groupEntities = Page.empty();
-        if (Objects.isNull(search) && Objects.isNull(tagId)){
-            groupEntities = groupRepository.findAll(pageable);
-        } else if (Objects.nonNull(search)) {
-            groupEntities = groupRepository.findAllByNameContainsIgnoreCase(search, pageable);
+    public Page<GroupOutput> getGroups(String accessToken, String search, Long tagId, Pageable pageable) {
+        Long userId = tokenHelper.getUserIdFromToken(accessToken);
+
+        Page<GroupEntity> groupEntities = Filter.builder(GroupEntity.class, entityManager)
+                .filter()
+                .isEqual("name", search)
+                .getPage(pageable);
+
+        if (groupEntities.isEmpty()) {
+            return new PageImpl<>(Collections.emptyList());
         }
-        else {
-            groupEntities = groupRepository.findAllByIdIn(
-                    // kiem tra ham finAllByIdIn(groupId,pageable) co chuyen thanh findAllByTagIdIn
-                    Arrays.asList(customRepository.getTag(tagId).getId()), pageable
-            );
+
+        List<UserGroupMapEntity> userGroupMapEntities = userGroupMapRepository.findAllByUserId(userId);
+        Map<Long, Boolean> userGroupMap = new HashMap<>();
+        if (Objects.nonNull(userGroupMapEntities) && !userGroupMapEntities.isEmpty()) {
+            for (UserGroupMapEntity userGroupMapEntity : userGroupMapEntities) {
+                userGroupMap.put(userGroupMapEntity.getGroupId(), true);
+            }
         }
-        return groupEntities.map(groupMapper::getOutputFromEntity);
+
+        List<RequestJoinGroupEntity> requestJoinGroupEntities = requestJoinGroupRepository.findAllByGroupIdInAndUserId(
+                groupEntities.stream().map(GroupEntity::getId).distinct().toList(), userId);
+        Map<Long, Boolean> requestJoinGroupMap = new HashMap<>();
+        if (Objects.nonNull(requestJoinGroupEntities) && !requestJoinGroupEntities.isEmpty()) {
+            for (RequestJoinGroupEntity requestJoinGroupEntity : requestJoinGroupEntities) {
+                requestJoinGroupMap.put(requestJoinGroupEntity.getGroupId(), true);
+            }
+        }
+
+        return groupEntities.map(groupEntity -> GroupOutput.builder()
+                .id(groupEntity.getId())
+                .name(groupEntity.getName())
+                .memberCount(groupEntity.getMemberCount())
+                .imageUrl(groupEntity.getImageUrl())
+                .isInGroup(userGroupMap.containsKey(groupEntity.getId()))
+                .isRequestJoin(requestJoinGroupMap.containsKey(groupEntity.getId()))
+                .build()
+        );
     }
 
     @Transactional
@@ -88,7 +168,7 @@ public class GroupService {
         Long managerId = tokenHelper.getUserIdFromToken(accessToken);
         GroupEntity groupEntity = GroupEntity.builder()
                 .name(groupInput.getName())
-                .memberCount(groupInput.getUserIds().size() +1)
+                .memberCount(groupInput.getUserIds().size() + 1)
                 .imageUrl(groupInput.getImageUrl())
                 .build();
         groupRepository.save(groupEntity);
@@ -101,7 +181,7 @@ public class GroupService {
         );
 
         for (Long userId : groupInput.getUserIds()) {
-            if(!managerId.equals(userId)){
+            if (!managerId.equals(userId)) {
                 userGroupMapRepository.save(
                         UserGroupMapEntity.builder()
                                 .userId(userId)
@@ -120,19 +200,22 @@ public class GroupService {
             );
         }
     }
-    @Transactional
-    public Page<GroupOutputAndTag> getListGroup(Pageable pageable){
-        Page<GroupEntity> groupEntities = groupRepository.findAll(pageable);
+
+    @Transactional(readOnly = true)
+    public Page<GroupOutputAndTag> getListGroup(String accessToken, Pageable pageable) {
+        Long userId = tokenHelper.getUserIdFromToken(accessToken);
+        List<UserGroupMapEntity> userGroupMapEntities = userGroupMapRepository.findAllByUserId(userId);
+        if (Objects.isNull(userGroupMapEntities) || userGroupMapEntities.isEmpty()) {
+            return Page.empty();
+        }
+        Page<GroupEntity> groupEntities = groupRepository.findAllByIdIn(
+                userGroupMapEntities.stream().map(UserGroupMapEntity::getGroupId).distinct().toList(), pageable);
         List<GroupOutputAndTag> groupOutputAndTages = new ArrayList<>();
-        for(GroupEntity groupEntity:groupEntities){
-            List<Long> tagIds = groupTagMapRepository.findAllByGroupId(groupEntity.getId()).stream()
-                    .map(GroupTagMapEntity::getTagId).collect(Collectors.toList());
-            List<String> tagName = tagRepository.findAllByIdIn(tagIds).stream().map(TagEntity::getName).collect(Collectors.toList());
+        for (GroupEntity groupEntity : groupEntities) {
             GroupOutputAndTag groupOutputAndTag = new GroupOutputAndTag();
             groupOutputAndTag.setIdGroup(groupEntity.getId());
             groupOutputAndTag.setName(groupEntity.getName());
             groupOutputAndTag.setMemberCount(groupEntity.getMemberCount());
-            groupOutputAndTag.setTagList(tagName);
             groupOutputAndTag.setImageUrl(groupEntity.getImageUrl());
             groupOutputAndTages.add(groupOutputAndTag);
         }
@@ -145,7 +228,7 @@ public class GroupService {
         if (Objects.isNull(userGroupEntities) || userGroupEntities.isEmpty()) {
             return Page.empty();
         }
-        Long managerId = userGroupMapRepository.findByGroupIdAndRole(groupId,Common.ADMIN).getUserId();
+        Long managerId = userGroupMapRepository.findByGroupIdAndRole(groupId, Common.ADMIN).getUserId();
 
         Map<Long, UserDto> userEntityMap = userRepository.getUsersBy(
                 userGroupEntities.stream().map(UserGroupMapEntity::getUserId).collect(Collectors.toList())
@@ -196,9 +279,9 @@ public class GroupService {
     public void leaveTheGroup(String accessToken, Long groupId) {
         Long userId = tokenHelper.getUserIdFromToken(accessToken);
         if (userGroupMapRepository.countByGroupId(groupId) > 1) {
-            userGroupMapRepository.deleteByUserIdAndGroupId(userId,groupId);
+            userGroupMapRepository.deleteByUserIdAndGroupId(userId, groupId);
         } else {
-            userGroupMapRepository.deleteByUserIdAndGroupId(userId,groupId);
+            userGroupMapRepository.deleteByUserIdAndGroupId(userId, groupId);
             groupRepository.deleteById(groupId);
         }
     }

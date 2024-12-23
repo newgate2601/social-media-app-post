@@ -1,7 +1,6 @@
 package com.example.social_media_app_post.feign.dto;
 
 import lombok.*;
-
 import java.time.OffsetDateTime;
 
 @Getter
