@@ -32,7 +32,7 @@ public class PostController {
     @PostMapping("/post")
     public void creatPost(@RequestHeader("Authorization") String accessToken,
                           @RequestBody @Valid CreatePostInput createPostInput) {
-        updatePostService.creatPost(accessToken, createPostInput);
+        updatePostService.createPost(accessToken, createPostInput);
     }
 
     @Operation(summary = "Sửa bài viết")

@@ -129,7 +129,7 @@ public class GetFriendsService {
     @Transactional(readOnly = true)
     public FriendInforOutput getFriendInformation(String accessToken, Long friendId){
         Long userId = tokenHelper.getUserIdFromToken(accessToken);
-        UserDto userEntity = uaaServiceProxy.getUsersBy(List.of(userId)).getFirst();
+        UserDto userEntity = uaaServiceProxy.getUsersBy(List.of(friendId)).getFirst();
         FriendInforOutput friendInforOutput = friendMapper.getFriendInforFromEntity(userEntity);
 
         Map<String, Long> friendStats = getFriendStats(friendId, userId);
