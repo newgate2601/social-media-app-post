@@ -66,6 +66,7 @@ public class FriendController {
                                                @RequestParam(name = "search", required = false) String search,
                                                @ParameterObject Pageable pageable){
         return getFriendService.getFriendBySearch(accessToken, search, pageable);
+
     }
 
     @Operation(summary = "Danh sách bạn bè")
