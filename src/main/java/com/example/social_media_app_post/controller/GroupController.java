@@ -17,12 +17,12 @@ import org.springframework.web.bind.annotation.*;
 public class GroupController {
     private final GroupService groupService;
 
-    @DeleteMapping("/join-cancel")
-    @Operation(summary = "Từ chối/ chấp nhận cho vào nhóm")
-    public void cancelRequestJoinGroup(@RequestHeader("Authorization") String accessToken,
-                                       @RequestParam Long groupId){
-        groupService.cancelRequestJoinGroup(accessToken, groupId);
-    }
+        @DeleteMapping("/join-cancel")
+        @Operation(summary = "Từ chối/ chấp nhận cho vào nhóm")
+        public void cancelRequestJoinGroup(@RequestHeader("Authorization") String accessToken,
+                                           @RequestParam Long groupId){
+            groupService.cancelRequestJoinGroup(accessToken, groupId);
+        }
 
     @PostMapping("/join-accept")
     @Operation(summary = "Từ chối/ chấp nhận cho vào nhóm")
