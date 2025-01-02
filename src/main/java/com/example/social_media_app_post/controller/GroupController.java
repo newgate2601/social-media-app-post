@@ -26,13 +26,13 @@ public class GroupController {
             groupService.acceptJoinGroup(accessToken,isAccept,groupId,userId);
         }
 
-        @Operation(summary = "Danh sách yêu cầu vào nhóm")
-        @GetMapping("/join-list")
-        public Page<UserDto> getAllRequestJoins(@RequestHeader("Authorization") String accessToken,
-                                                @RequestParam Long groupId,
-                                                @ParameterObject Pageable pageable) {
-            return groupService.getAllRequestJoins(accessToken, groupId, pageable);
-        }
+    @Operation(summary = "Danh sách yêu cầu vào nhóm")
+    @GetMapping("/join-list")
+    public Page<UserDto> getAllRequestJoins(@RequestHeader("Authorization") String accessToken,
+                                            @RequestParam Long groupId,
+                                            @ParameterObject Pageable pageable) {
+        return groupService.getAllRequestJoins(accessToken, groupId, pageable);
+    }
 
         @Operation(summary = "Yêu cầu vào nhóm")
         @PostMapping("/join-request")
@@ -41,13 +41,13 @@ public class GroupController {
             groupService.requestJoinGroup(accessToken, groupId);
         }
 
-        @Operation(summary = "Sửa thông tin nhóm")
-        @PutMapping
-        public void update(@RequestHeader("Authorization") String accessToken,
-                           @RequestParam Long id,
-                           @RequestBody @Valid UpdateGroupInput updateGroupInput) {
-            groupService.update(accessToken, id, updateGroupInput);
-        }
+    @Operation(summary = "Sửa thông tin nhóm")
+    @PutMapping
+    public void update(@RequestHeader("Authorization") String accessToken,
+                       @RequestParam Long id,
+                       @RequestBody @Valid UpdateGroupInput updateGroupInput) {
+        groupService.update(accessToken, id, updateGroupInput);
+    }
 
     @Operation(summary = "Tạo nhóm")
     @PostMapping("/create-group")
