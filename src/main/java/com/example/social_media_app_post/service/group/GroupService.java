@@ -164,89 +164,89 @@ public class GroupService {
         );
     }
 
-    @Transactional
-    public void create(GroupInput groupInput, String accessToken) {
-        Long managerId = tokenHelper.getUserIdFromToken(accessToken);
-        GroupEntity groupEntity = GroupEntity.builder()
-                .name(groupInput.getName())
-                .memberCount(groupInput.getUserIds().size() + 1)
-                .imageUrl(groupInput.getImageUrl())
-                .build();
-        groupRepository.save(groupEntity); // groupId = 1
-        userGroupMapRepository.save(
-                UserGroupMapEntity.builder()
-                        .userId(managerId)
-                        .groupId(groupEntity.getId())
-                        .role(Common.ADMIN)
-                        .build()
-        );
+        @Transactional
+        public void create(GroupInput groupInput, String accessToken) {
+            Long managerId = tokenHelper.getUserIdFromToken(accessToken);
+            GroupEntity groupEntity = GroupEntity.builder()
+                    .name(groupInput.getName())
+                    .memberCount(groupInput.getUserIds().size() + 1)
+                    .imageUrl(groupInput.getImageUrl())
+                    .build();
+            groupRepository.save(groupEntity); // groupId = 1
+            userGroupMapRepository.save(
+                    UserGroupMapEntity.builder()
+                            .userId(managerId)
+                            .groupId(groupEntity.getId())
+                            .role(Common.ADMIN)
+                            .build()
+            );
 
-        for (Long userId : groupInput.getUserIds()) {
-            if (!managerId.equals(userId)) {
-                userGroupMapRepository.save(
-                        UserGroupMapEntity.builder()
-                                .userId(userId)
-                                .role(Common.MEMBER)
+            for (Long userId : groupInput.getUserIds()) {
+                if (!managerId.equals(userId)) {
+                    userGroupMapRepository.save(
+                            UserGroupMapEntity.builder()
+                                    .userId(userId)
+                                    .role(Common.MEMBER)
+                                    .groupId(groupEntity.getId())
+                                    .build()
+                    );
+                }
+            }
+            for (Long tagId : groupInput.getTagIds()) {
+                groupTagMapRepository.save(
+                        GroupTagMapEntity.builder()
+                                .tagId(tagId)
                                 .groupId(groupEntity.getId())
                                 .build()
                 );
             }
         }
-        for (Long tagId : groupInput.getTagIds()) {
-            groupTagMapRepository.save(
-                    GroupTagMapEntity.builder()
-                            .tagId(tagId)
-                            .groupId(groupEntity.getId())
-                            .build()
+
+        @Transactional(readOnly = true)
+        public Page<GroupOutputAndTag> getListGroup(String accessToken, Pageable pageable) {
+            Long userId = tokenHelper.getUserIdFromToken(accessToken);
+            List<UserGroupMapEntity> userGroupMapEntities = userGroupMapRepository.findAllByUserId(userId);
+            if (Objects.isNull(userGroupMapEntities) || userGroupMapEntities.isEmpty()) {
+                return Page.empty();
+            }
+            Page<GroupEntity> groupEntities = groupRepository.findAllByIdIn(
+                    userGroupMapEntities.stream().map(UserGroupMapEntity::getGroupId).distinct().toList(), pageable);
+            List<GroupOutputAndTag> groupOutputAndTages = new ArrayList<>();
+            for (GroupEntity groupEntity : groupEntities) {
+                GroupOutputAndTag groupOutputAndTag = new GroupOutputAndTag();
+                groupOutputAndTag.setIdGroup(groupEntity.getId());
+                groupOutputAndTag.setName(groupEntity.getName());
+                groupOutputAndTag.setMemberCount(groupEntity.getMemberCount());
+                groupOutputAndTag.setImageUrl(groupEntity.getImageUrl());
+                groupOutputAndTages.add(groupOutputAndTag);
+            }
+            return new PageImpl<>(groupOutputAndTages, pageable, groupEntities.getTotalElements());
+        }
+
+        @Transactional(readOnly = true)
+        public Page<GroupMemberOutPut> getGroupMembers(Long groupId, String accessToken, Pageable pageable) {
+            Page<UserGroupMapEntity> userGroupEntities = userGroupMapRepository.findAllByGroupId(groupId, pageable);
+            if (Objects.isNull(userGroupEntities) || userGroupEntities.isEmpty()) {
+                return Page.empty();
+            }
+            Long managerId = userGroupMapRepository.findByGroupIdAndRole(groupId, Common.ADMIN).getUserId();
+
+            Map<Long, UserDto> userEntityMap = userRepository.getUsersBy(
+                    userGroupEntities.stream().map(UserGroupMapEntity::getUserId).collect(Collectors.toList())
+            ).stream().collect(Collectors.toMap(UserDto::getId, Function.identity()));
+
+            return userGroupEntities.map(
+                    userGroupEntity -> {
+                        UserDto userEntity = userEntityMap.get(userGroupEntity.getUserId());
+                        return GroupMemberOutPut.builder()
+                                .id(userEntity.getId())
+                                .fullName(userEntity.getFullName())
+                                .imageUrl(userEntity.getImageUrl())
+                                .role(userEntity.getId().equals(managerId) ? Common.ADMIN : Common.MEMBER)
+                                .build();
+                    }
             );
         }
-    }
-
-    @Transactional(readOnly = true)
-    public Page<GroupOutputAndTag> getListGroup(String accessToken, Pageable pageable) {
-        Long userId = tokenHelper.getUserIdFromToken(accessToken);
-        List<UserGroupMapEntity> userGroupMapEntities = userGroupMapRepository.findAllByUserId(userId);
-        if (Objects.isNull(userGroupMapEntities) || userGroupMapEntities.isEmpty()) {
-            return Page.empty();
-        }
-        Page<GroupEntity> groupEntities = groupRepository.findAllByIdIn(
-                userGroupMapEntities.stream().map(UserGroupMapEntity::getGroupId).distinct().toList(), pageable);
-        List<GroupOutputAndTag> groupOutputAndTages = new ArrayList<>();
-        for (GroupEntity groupEntity : groupEntities) {
-            GroupOutputAndTag groupOutputAndTag = new GroupOutputAndTag();
-            groupOutputAndTag.setIdGroup(groupEntity.getId());
-            groupOutputAndTag.setName(groupEntity.getName());
-            groupOutputAndTag.setMemberCount(groupEntity.getMemberCount());
-            groupOutputAndTag.setImageUrl(groupEntity.getImageUrl());
-            groupOutputAndTages.add(groupOutputAndTag);
-        }
-        return new PageImpl<>(groupOutputAndTages, pageable, groupEntities.getTotalElements());
-    }
-
-    @Transactional(readOnly = true)
-    public Page<GroupMemberOutPut> getGroupMembers(Long groupId, String accessToken, Pageable pageable) {
-        Page<UserGroupMapEntity> userGroupEntities = userGroupMapRepository.findAllByGroupId(groupId, pageable);
-        if (Objects.isNull(userGroupEntities) || userGroupEntities.isEmpty()) {
-            return Page.empty();
-        }
-        Long managerId = userGroupMapRepository.findByGroupIdAndRole(groupId, Common.ADMIN).getUserId();
-
-        Map<Long, UserDto> userEntityMap = userRepository.getUsersBy(
-                userGroupEntities.stream().map(UserGroupMapEntity::getUserId).collect(Collectors.toList())
-        ).stream().collect(Collectors.toMap(UserDto::getId, Function.identity()));
-
-        return userGroupEntities.map(
-                userGroupEntity -> {
-                    UserDto userEntity = userEntityMap.get(userGroupEntity.getUserId());
-                    return GroupMemberOutPut.builder()
-                            .id(userEntity.getId())
-                            .fullName(userEntity.getFullName())
-                            .imageUrl(userEntity.getImageUrl())
-                            .role(userEntity.getId().equals(managerId) ? Common.ADMIN : Common.MEMBER)
-                            .build();
-                }
-        );
-    }
 
     @Transactional
     public void addNewMember(GroupAddNewMemberInput groupAddNewMemberInput, String accessToken) {

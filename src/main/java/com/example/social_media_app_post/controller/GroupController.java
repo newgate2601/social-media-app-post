@@ -65,20 +65,20 @@ public class GroupController {
             return groupService.getGroups(accessToken, search, tagId, pageable);
         }
 
-    @Operation(summary = "Lấy danh sách thành viên trong nhóm")
-    @GetMapping("/members")
-    public Page<GroupMemberOutPut> getGroupMemBer(@RequestParam Long groupId,
-                                                  @RequestHeader("Authorization") String accessToken,
-                                                  @ParameterObject Pageable pageable) {
-        return groupService.getGroupMembers(groupId, accessToken, pageable);
-    }
+        @Operation(summary = "Lấy danh sách thành viên trong nhóm")
+        @GetMapping("/members")
+        public Page<GroupMemberOutPut> getGroupMemBer(@RequestParam Long groupId,
+                                                      @RequestHeader("Authorization") String accessToken,
+                                                      @ParameterObject Pageable pageable) {
+            return groupService.getGroupMembers(groupId, accessToken, pageable);
+        }
 
-    @Operation(summary = "Lấy danh sách nhóm")
-    @GetMapping("/get-list-group")
-    public Page<GroupOutputAndTag> getAllGroups(@RequestHeader("Authorization") String accessToken,
-                                                @ParameterObject Pageable pageable) {
-        return groupService.getListGroup(accessToken, pageable);
-    }
+        @Operation(summary = "Lấy danh sách nhóm")
+        @GetMapping("/get-list-group")
+        public Page<GroupOutputAndTag> getAllGroups(@RequestHeader("Authorization") String accessToken,
+                                                    @ParameterObject Pageable pageable) {
+            return groupService.getListGroup(accessToken, pageable);
+        }
 
     @Operation(summary = "Thêm thành viên vào nhóm")
     @PostMapping("/add-member")
