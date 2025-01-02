@@ -68,31 +68,31 @@ public class GroupService {
                     .build());
         }
 
-    @Transactional(readOnly = true)
-    public Page<UserDto> getAllRequestJoins(String accessToken, Long groupId, Pageable pageable) {
-        Page<RequestJoinGroupEntity> requestJoinGroupEntities = Filter.builder(RequestJoinGroupEntity.class, entityManager)
-                .filter()
-                .isEqual("groupId", groupId)
-                .getPage(pageable);
+        @Transactional(readOnly = true)
+        public Page<UserDto> getAllRequestJoins(String accessToken, Long groupId, Pageable pageable) {
+            Page<RequestJoinGroupEntity> requestJoinGroupEntities = Filter.builder(RequestJoinGroupEntity.class, entityManager)
+                    .filter()
+                    .isEqual("groupId", groupId)
+                    .getPage(pageable);
 
-        if (requestJoinGroupEntities.isEmpty()) {
-            return new PageImpl<>(Collections.emptyList());
+            if (requestJoinGroupEntities.isEmpty()) {
+                return new PageImpl<>(Collections.emptyList());
+            }
+            return requestJoinGroupEntities.map(requestJoinGroupEntity -> UserDto.builder()
+                    .id(requestJoinGroupEntity.getUserId())
+                    .fullName(requestJoinGroupEntity.getFullName())
+                    .imageBackground(requestJoinGroupEntity.getImageUrl())
+                    .build());
         }
-        return requestJoinGroupEntities.map(requestJoinGroupEntity -> UserDto.builder()
-                .id(requestJoinGroupEntity.getUserId())
-                .fullName(requestJoinGroupEntity.getFullName())
-                .imageBackground(requestJoinGroupEntity.getImageUrl())
-                .build());
-    }
 
-    @Transactional
-    public void update(String accessToken, Long id, UpdateGroupInput updateGroupInput) {
-        GroupEntity groupEntity = groupRepository.findById(id).get();
-        groupEntity.setName(updateGroupInput.getName());
-        groupEntity.setDescription(updateGroupInput.getDescription());
-        groupEntity.setImageUrl(updateGroupInput.getImageUrl());
-        groupRepository.save(groupEntity);
-    }
+        @Transactional
+        public void update(String accessToken, Long id, UpdateGroupInput updateGroupInput) {
+            GroupEntity groupEntity = groupRepository.findById(id).get();
+            groupEntity.setName(updateGroupInput.getName());
+            groupEntity.setDescription(updateGroupInput.getDescription());
+            groupEntity.setImageUrl(updateGroupInput.getImageUrl());
+            groupRepository.save(groupEntity);
+        }
 
     @Transactional
     public GroupOutputAndTag getInforGroup(String accessToken,
