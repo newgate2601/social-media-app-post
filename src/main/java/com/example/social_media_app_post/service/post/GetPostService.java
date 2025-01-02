@@ -107,6 +107,7 @@ public class GetPostService {
         Map<Long, UserDto> userEntityMap = new HashMap<>();
         userEntityMap.put(userEntity.getId(), userEntity);
         return setHasLikeForPosts(userId, mapResponsePostPage(postEntityPage, userEntityMap));
+
     }
 
     @Transactional(readOnly = true)
