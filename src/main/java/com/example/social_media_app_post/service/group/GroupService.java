@@ -248,42 +248,42 @@ public class GroupService {
             );
         }
 
-    @Transactional
-    public void addNewMember(GroupAddNewMemberInput groupAddNewMemberInput, String accessToken) {
-        if (Boolean.FALSE.equals(userGroupMapRepository.existsByUserIdInAndGroupId(
-                Arrays.asList(tokenHelper.getUserIdFromToken(accessToken)), groupAddNewMemberInput.getGroupId()
-        ))) {
-            throw new RuntimeException(Common.ACTION_FAIL);
+        @Transactional
+        public void addNewMember(GroupAddNewMemberInput groupAddNewMemberInput, String accessToken) {
+            if (Boolean.FALSE.equals(userGroupMapRepository.existsByUserIdInAndGroupId(
+                    Arrays.asList(tokenHelper.getUserIdFromToken(accessToken)), groupAddNewMemberInput.getGroupId()
+            ))) {
+                throw new RuntimeException(Common.ACTION_FAIL);
+            }
+            if (Boolean.TRUE.equals(userGroupMapRepository.existsByUserIdInAndGroupId(
+                    groupAddNewMemberInput.getUserIds(), groupAddNewMemberInput.getGroupId()
+            ))) {
+                throw new RuntimeException(Common.ACTION_FAIL);
+            }
+            for (Long newUserId : groupAddNewMemberInput.getUserIds()) {
+                userGroupMapRepository.save(
+                        UserGroupMapEntity.builder()
+                                .userId(newUserId)
+                                .groupId(groupAddNewMemberInput.getGroupId())
+                                .role(Common.MEMBER)
+                                .build()
+                );
+            }
         }
-        if (Boolean.TRUE.equals(userGroupMapRepository.existsByUserIdInAndGroupId(
-                groupAddNewMemberInput.getUserIds(), groupAddNewMemberInput.getGroupId()
-        ))) {
-            throw new RuntimeException(Common.ACTION_FAIL);
-        }
-        for (Long newUserId : groupAddNewMemberInput.getUserIds()) {
-            userGroupMapRepository.save(
-                    UserGroupMapEntity.builder()
-                            .userId(newUserId)
-                            .groupId(groupAddNewMemberInput.getGroupId())
-                            .role(Common.MEMBER)
-                            .build()
-            );
-        }
-    }
 
-    @Transactional
-    public void deleteMember(String accessToken, GroupDeleteMemberInput groupDeleteMemberInput) {
-        userGroupMapRepository.deleteAllByUserIdAndGroupId(groupDeleteMemberInput.getUserId(), groupDeleteMemberInput.getGroupId());
-    }
-
-    @Transactional
-    public void leaveTheGroup(String accessToken, Long groupId) {
-        Long userId = tokenHelper.getUserIdFromToken(accessToken);
-        if (userGroupMapRepository.countByGroupId(groupId) > 1) {
-            userGroupMapRepository.deleteByUserIdAndGroupId(userId, groupId);
-        } else {
-            userGroupMapRepository.deleteByUserIdAndGroupId(userId, groupId);
-            groupRepository.deleteById(groupId);
+        @Transactional
+        public void deleteMember(String accessToken, GroupDeleteMemberInput groupDeleteMemberInput) {
+            userGroupMapRepository.deleteAllByUserIdAndGroupId(groupDeleteMemberInput.getUserId(), groupDeleteMemberInput.getGroupId());
         }
-    }
+
+        @Transactional
+        public void leaveTheGroup(String accessToken, Long groupId) {
+            Long userId = tokenHelper.getUserIdFromToken(accessToken);
+            if (userGroupMapRepository.countByGroupId(groupId) > 1) {
+                userGroupMapRepository.deleteByUserIdAndGroupId(userId, groupId);
+            } else {
+                userGroupMapRepository.deleteByUserIdAndGroupId(userId, groupId);
+                groupRepository.deleteById(groupId);
+            }
+        }
 }

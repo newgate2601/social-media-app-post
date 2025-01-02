@@ -80,20 +80,20 @@ public class GroupController {
             return groupService.getListGroup(accessToken, pageable);
         }
 
-    @Operation(summary = "Thêm thành viên vào nhóm")
-    @PostMapping("/add-member")
-    public void addNewMember(@RequestBody @Valid GroupAddNewMemberInput groupAddNewMemberInput,
-                             @RequestHeader("Authorization") String accessToken) {
-        groupService.addNewMember(groupAddNewMemberInput, accessToken);
-    }
+        @Operation(summary = "Thêm thành viên vào nhóm")
+        @PostMapping("/add-member")
+        public void addNewMember(@RequestBody @Valid GroupAddNewMemberInput groupAddNewMemberInput,
+                                 @RequestHeader("Authorization") String accessToken) {
+            groupService.addNewMember(groupAddNewMemberInput, accessToken);
+        }
 
-    @Operation(summary = "Xóa thành viên khỏi nhóm")
-    @DeleteMapping("/delete-member")
-    public void deleteMember(@RequestHeader("Authorization") String accessToken,
-                             @RequestParam Long groupId,
-                             @RequestParam Long userId) {
-        groupService.deleteMember(accessToken, new GroupDeleteMemberInput(groupId, userId));
-    }
+        @Operation(summary = "Xóa thành viên khỏi nhóm")
+        @DeleteMapping("/delete-member")
+        public void deleteMember(@RequestHeader("Authorization") String accessToken,
+                                 @RequestParam Long groupId,
+                                 @RequestParam Long userId) {
+            groupService.deleteMember(accessToken, new GroupDeleteMemberInput(groupId, userId));
+        }
 
     @Operation(summary = "Lấy thông tin nhóm")
     @GetMapping("/group/infor")
@@ -102,10 +102,10 @@ public class GroupController {
         return groupService.getInforGroup(accessToken, groupId);
     }
 
-    @Operation(summary = "Rời nhóm")
-    @DeleteMapping("/leave-group")
-    public void leaveTheGroupChat(@RequestHeader("Authorization") String accessToken,
-                                  @RequestParam Long groupId) {
-        groupService.leaveTheGroup(accessToken, groupId);
-    }
+        @Operation(summary = "Rời nhóm")
+        @DeleteMapping("/leave-group")
+        public void leaveTheGroupChat(@RequestHeader("Authorization") String accessToken,
+                                      @RequestParam Long groupId) {
+            groupService.leaveTheGroup(accessToken, groupId);
+        }
 }
