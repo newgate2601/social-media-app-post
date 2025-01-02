@@ -71,6 +71,7 @@ public class GetPostService {
                 .collect(Collectors.toMap(UserDto::getId, Function.identity()));
 
         return setHasLikeForPosts(userId, mapResponsePostPage(postEntitiesOfFriends, friendMapEntityMap));
+
     }
 
     @Transactional(readOnly = true)
