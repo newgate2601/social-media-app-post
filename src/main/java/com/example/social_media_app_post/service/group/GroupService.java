@@ -94,34 +94,34 @@ public class GroupService {
             groupRepository.save(groupEntity);
         }
 
-    @Transactional
-    public GroupOutputAndTag getInforGroup(String accessToken,
-                                           Long groupId) {
-        Long userId = tokenHelper.getUserIdFromToken(accessToken);
-        GroupEntity groupEntity = groupRepository.findById(groupId).orElseThrow(
-                () -> new RuntimeException(Common.ACTION_FAIL)
-        );
+        @Transactional
+        public GroupOutputAndTag getInforGroup(String accessToken,
+                                               Long groupId) {
+            Long userId = tokenHelper.getUserIdFromToken(accessToken);
+            GroupEntity groupEntity = groupRepository.findById(groupId).orElseThrow(
+                    () -> new RuntimeException(Common.ACTION_FAIL)
+            );
 
-        GroupOutputAndTag groupOutputAndTag = new GroupOutputAndTag();
-        groupOutputAndTag.setIdGroup(groupEntity.getId());
-        groupOutputAndTag.setName(groupEntity.getName());
-        groupOutputAndTag.setMemberCount(groupEntity.getMemberCount());
-        groupOutputAndTag.setImageUrl(groupEntity.getImageUrl());
-        groupOutputAndTag.setDescription(groupEntity.getDescription());
+            GroupOutputAndTag groupOutputAndTag = new GroupOutputAndTag();
+            groupOutputAndTag.setIdGroup(groupEntity.getId());
+            groupOutputAndTag.setName(groupEntity.getName());
+            groupOutputAndTag.setMemberCount(groupEntity.getMemberCount());
+            groupOutputAndTag.setImageUrl(groupEntity.getImageUrl());
+            groupOutputAndTag.setDescription(groupEntity.getDescription());
 
-        List<UserGroupMapEntity> userGroupMapEntities = userGroupMapRepository.findAllByGroupIdAndUserId(groupId, userId);
-        Boolean requestedJoinGroup = requestJoinGroupRepository.existsByGroupIdAndUserId(groupId, userId);
-        groupOutputAndTag.setIsRequestJoin(requestedJoinGroup);
-        if (Objects.isNull(userGroupMapEntities) || userGroupMapEntities.isEmpty()) {
-            groupOutputAndTag.setIsInGroup(false);
-        } else {
-            UserGroupMapEntity userGroupMapEntity = userGroupMapEntities.getFirst();
-            groupOutputAndTag.setIsInGroup(true);
-            groupOutputAndTag.setRole(userGroupMapEntity.getRole());
+            List<UserGroupMapEntity> userGroupMapEntities = userGroupMapRepository.findAllByGroupIdAndUserId(groupId, userId);
+            Boolean requestedJoinGroup = requestJoinGroupRepository.existsByGroupIdAndUserId(groupId, userId);
+            groupOutputAndTag.setIsRequestJoin(requestedJoinGroup);
+            if (Objects.isNull(userGroupMapEntities) || userGroupMapEntities.isEmpty()) {
+                groupOutputAndTag.setIsInGroup(false);
+            } else {
+                UserGroupMapEntity userGroupMapEntity = userGroupMapEntities.getFirst();
+                groupOutputAndTag.setIsInGroup(true);
+                groupOutputAndTag.setRole(userGroupMapEntity.getRole());
+            }
+
+            return groupOutputAndTag;
         }
-
-        return groupOutputAndTag;
-    }
 
     @Transactional(readOnly = true)
     public Page<GroupOutput> getGroups(String accessToken, String search, Long tagId, Pageable pageable) {

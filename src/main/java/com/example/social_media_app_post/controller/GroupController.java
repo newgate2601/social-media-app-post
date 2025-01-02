@@ -95,12 +95,12 @@ public class GroupController {
             groupService.deleteMember(accessToken, new GroupDeleteMemberInput(groupId, userId));
         }
 
-    @Operation(summary = "Lấy thông tin nhóm")
-    @GetMapping("/group/infor")
-    public GroupOutputAndTag getInforGroup(@RequestHeader("Authorization") String accessToken,
-                                           @RequestParam Long groupId) {
-        return groupService.getInforGroup(accessToken, groupId);
-    }
+        @Operation(summary = "Lấy thông tin nhóm")
+        @GetMapping("/group/infor")
+        public GroupOutputAndTag getInforGroup(@RequestHeader("Authorization") String accessToken,
+                                               @RequestParam Long groupId) {
+            return groupService.getInforGroup(accessToken, groupId);
+        }
 
         @Operation(summary = "Rời nhóm")
         @DeleteMapping("/leave-group")
