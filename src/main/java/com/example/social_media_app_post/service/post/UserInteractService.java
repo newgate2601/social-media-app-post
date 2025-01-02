@@ -175,6 +175,7 @@ public class UserInteractService {
         commentCount++;
         postEntity.setCommentCount(commentCount);
         postRepository.save(postEntity);
+
     }
 
     @Transactional
