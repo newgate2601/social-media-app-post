@@ -13,7 +13,6 @@ import org.springframework.stereotype.Component;
 @Component
 public class TokenHelper {
     private static final long EXPIRATION_TIME = 864_000_000; // 10 days
-    private final JwtEncoder jwtEncoder;
     private final JwtDecoder jwtDecoder;
 
     public Long getUserIdFromToken(String token) {

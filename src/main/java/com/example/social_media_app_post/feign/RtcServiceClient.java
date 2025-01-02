@@ -1,17 +1,19 @@
 package com.example.social_media_app_post.feign;
 
+import com.example.social_media_app_post.common.Common;
 import com.example.social_media_app_post.feign.dto.ChatDto;
 import com.example.social_media_app_post.feign.dto.CreateChatForUserDto;
 import com.example.social_media_app_post.feign.dto.EventNotificationRequest;
 import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 
-//@FeignClient("RTC-SERVICE")
-@FeignClient(url = "localhost:8086", name = "RTC-SERVICE")
+@FeignClient("RTC-SERVICE")
+//@FeignClient(url = "localhost:8087", name = "RTC-SERVICE")
 public interface RtcServiceClient {
+    @DeleteMapping(value = "/api/v1/event-notification", produces = "application/json")
+    void deleteAllEventNotificationByType(@RequestParam Long userId,
+                                          @RequestParam String type);
+
     @GetMapping(value = "/api/v1/chat/detail")
     ChatDto getChatBy(@RequestParam Long userId1, @RequestParam Long userId2);
 
