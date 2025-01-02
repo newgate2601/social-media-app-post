@@ -62,7 +62,6 @@ public class UpdateFriendsService {
         Long userId = tokenHelper.getUserIdFromToken(accessToken);
         friendMapRepository.deleteAllByUserId1AndUserId2(userId, friendId);
         friendMapRepository.deleteAllByUserId1AndUserId2(friendId, userId);
-
     }
 
     @Transactional
@@ -72,6 +71,7 @@ public class UpdateFriendsService {
             throw new RuntimeException(Common.RECORD_NOT_FOUND);
         }
         friendRequestRepository.deleteByReceiverIdAndSenderId(receiverId, userId);
+
     }
 
     @Transactional
