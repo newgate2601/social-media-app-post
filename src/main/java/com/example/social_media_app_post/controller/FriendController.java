@@ -37,13 +37,13 @@ public class FriendController {
         @DeleteMapping("/delete-request/user")
         public void deleteAddFriendRequest( @RequestHeader("Authorization") String accessToken,
                                             @RequestParam Long receiverId) {
-            updateFriendsService.deleteSendFriendRequest(accessToken, receiverId);
+            updateFriendsService.deleteSendFriendRequest(accessToken, receiverId);    
         }
 
         @Operation(summary = "Đồng ý lời mời kết bạn")
         @PostMapping("/accept")
         public void acceptAddFriendRequest(@RequestParam Long id, @RequestHeader("Authorization") String accessToken) {
-            updateFriendsService.acceptAddFriendRequest(id, accessToken);
+            updateFriendsService.acceptAddFriendRequest(id, accessToken);  
         }
 
         @Operation(summary = "Gửi yêu cầu kết bạn")
