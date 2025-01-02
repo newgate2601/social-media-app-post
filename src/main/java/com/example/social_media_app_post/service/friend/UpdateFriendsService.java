@@ -78,7 +78,7 @@ public class UpdateFriendsService {
     public void sendRequestAddFriend(Long receiveId, String accessToken) {
             Long senderId = tokenHelper.getUserIdFromToken(accessToken);
             if (receiveId.equals(senderId)) {
-                throw new RuntimeException(Common.ACTION_FAIL);
+                throw new RuntimeException(Common.ACTION_FAIL);  
             }
             // Neu da gui yeu cau roi thi k dc gui nua -- notDone
             FriendRequestEntity friendRequestEntity = FriendRequestEntity.builder()
@@ -131,7 +131,7 @@ public class UpdateFriendsService {
                                        String token) { // user accept
             Long receiverId = tokenHelper.getUserIdFromToken(token);
             if (Boolean.FALSE.equals(friendRequestRepository.existsBySenderIdAndReceiverId(senderId, receiverId))) {
-                throw new RuntimeException(Common.ACTION_FAIL);
+                throw new RuntimeException(Common.ACTION_FAIL);   
             }
 
             friendMapRepository.save(FriendMapEntity.builder()
