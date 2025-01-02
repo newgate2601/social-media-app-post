@@ -40,39 +40,33 @@ public class GroupService {
     private final EntityManager entityManager;
     private final RequestJoinGroupRepository requestJoinGroupRepository;
 
-    @Transactional
-    public void cancelRequestJoinGroup(String accessToken, Long groupId){
-        Long userId = tokenHelper.getUserIdFromToken(accessToken);
-        requestJoinGroupRepository.deleteAllByGroupIdAndUserId(groupId, userId);
-    }
+        @Transactional
+        public void acceptJoinGroup(String accessToken, Boolean isAccept, Long groupId, Long userId) {
+            requestJoinGroupRepository.deleteAllByGroupIdAndUserId(groupId, userId);
+            if (Boolean.TRUE.equals(isAccept)) {
+                userGroupMapRepository.save(UserGroupMapEntity.builder()
+                        .groupId(groupId)
+                        .userId(userId)
+                        .role(Common.MEMBER)
+                        .build()
+                );
+            }
+        }
 
-    @Transactional
-    public void acceptJoinGroup(String accessToken, Boolean isAccept, Long groupId, Long userId) {
-        requestJoinGroupRepository.deleteAllByGroupIdAndUserId(groupId, userId);
-        if (Boolean.TRUE.equals(isAccept)) {
-            userGroupMapRepository.save(UserGroupMapEntity.builder()
+        @Transactional
+        public void requestJoinGroup(String accessToken, Long groupId) {
+            Long userId = tokenHelper.getUserIdFromToken(accessToken);
+            if (userGroupMapRepository.existsByUserIdAndGroupId(userId, groupId)
+                    || requestJoinGroupRepository.existsByGroupIdAndUserId(groupId, userId)) {
+                return;
+            }
+            requestJoinGroupRepository.save(RequestJoinGroupEntity.builder()
                     .groupId(groupId)
                     .userId(userId)
-                    .role(Common.MEMBER)
-                    .build()
-            );
+                    .fullName(tokenHelper.getFullNameFromToken(accessToken))
+                    .imageUrl(tokenHelper.getImageUrlFromToken(accessToken))
+                    .build());
         }
-    }
-
-    @Transactional
-    public void requestJoinGroup(String accessToken, Long groupId) {
-        Long userId = tokenHelper.getUserIdFromToken(accessToken);
-        if (userGroupMapRepository.existsByUserIdAndGroupId(userId, groupId)
-                || requestJoinGroupRepository.existsByGroupIdAndUserId(groupId, userId)) {
-            return;
-        }
-        requestJoinGroupRepository.save(RequestJoinGroupEntity.builder()
-                .groupId(groupId)
-                .userId(userId)
-                .fullName(tokenHelper.getFullNameFromToken(accessToken))
-                .imageUrl(tokenHelper.getImageUrlFromToken(accessToken))
-                .build());
-    }
 
     @Transactional(readOnly = true)
     public Page<UserDto> getAllRequestJoins(String accessToken, Long groupId, Pageable pageable) {
