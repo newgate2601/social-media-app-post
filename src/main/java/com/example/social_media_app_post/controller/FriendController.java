@@ -38,6 +38,7 @@ public class FriendController {
     public void deleteAddFriendRequest( @RequestHeader("Authorization") String accessToken,
                                         @RequestParam Long receiverId) {
         updateFriendsService.deleteSendFriendRequest(accessToken, receiverId);
+
     }
 
     @Operation(summary = "Đồng ý lời mời kết bạn")
