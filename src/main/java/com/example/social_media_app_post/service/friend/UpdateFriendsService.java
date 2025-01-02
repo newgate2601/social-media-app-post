@@ -79,7 +79,6 @@ public class UpdateFriendsService {
         if (receiveId.equals(senderId)) {
             throw new RuntimeException(Common.ACTION_FAIL);
         }
-        // Neu da gui yeu cau roi thi k dc gui nua -- notDone
         FriendRequestEntity friendRequestEntity = FriendRequestEntity.builder()
                 .senderId(senderId)
                 .receiverId(receiveId)
