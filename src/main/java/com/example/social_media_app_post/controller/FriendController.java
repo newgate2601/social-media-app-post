@@ -85,12 +85,12 @@ public class FriendController {
     @Operation(summary = "Xóa bạn")
     @DeleteMapping("/delete")
     void deleteFriends(@RequestParam Long friendId, @RequestHeader("Authorization") String accessToken){
-        updateFriendsService.deleteFriend(friendId, accessToken);
+        updateFriendsService.deleteFriend(friendId, accessToken);  
     }
 
         @Operation(summary = "Từ chối lời mời kết bạn")
         @DeleteMapping("/reject")
         void rejectAddFriendRequest(@RequestParam Long senderId, @RequestHeader("Authorization") String accessToken){
-            updateFriendsService.rejectAddFriendRequest(senderId, accessToken);
+            updateFriendsService.rejectAddFriendRequest(senderId, accessToken);  
         }
 }
