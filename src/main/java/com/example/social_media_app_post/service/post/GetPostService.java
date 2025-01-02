@@ -6,10 +6,12 @@ import com.example.social_media_app_post.dto.post.PostOutput;
 import com.example.social_media_app_post.entity.FriendMapEntity;
 import com.example.social_media_app_post.entity.LikeMapEntity;
 import com.example.social_media_app_post.entity.PostEntity;
+import com.example.social_media_app_post.entity.PostImageMapEntity;
 import com.example.social_media_app_post.feign.dto.UserDto;
 import com.example.social_media_app_post.feign.impl.UaaServiceProxy;
 import com.example.social_media_app_post.repository.FriendMapRepository;
 import com.example.social_media_app_post.repository.LikeMapRepository;
+import com.example.social_media_app_post.repository.PostImageMapRepository;
 import com.example.social_media_app_post.repository.PostRepository;
 import com.example.social_media_app_post.security.TokenHelper;
 import com.example.social_media_app_post.service.mapper.PostMapper;
@@ -32,6 +34,7 @@ public class GetPostService {
     private final UaaServiceProxy uaaServiceProxy;
     private final LikeMapRepository likeMapRepository;
     private final PostMapper postMapper;
+    private final PostImageMapRepository postImageMapRepository;
 
     @Transactional(readOnly = true)
     public Page<PostOutput> getPostOfListFriend(String accessToken, Long friendId, Pageable pageable){
@@ -57,7 +60,7 @@ public class GetPostService {
         friendIds = friendIds.stream().filter(id -> !id.equals(userId)).collect(Collectors.toSet());
 
         Page<PostEntity> postEntitiesOfFriends =
-                postRepository.findAllByUserIdInAndState(friendIds, Common.PUBLIC, pageable);
+                postRepository.findAllByUserIdIn(friendIds, pageable);
         if (Objects.isNull(postEntitiesOfFriends) || postEntitiesOfFriends.isEmpty()) {
             return Page.empty();
         }
@@ -71,15 +74,26 @@ public class GetPostService {
     }
 
     @Transactional(readOnly = true)
-    public Page<PostOutput> getPostsByUserId(Long userId, String accessToken, Pageable pageable){
-        Page<PostEntity> postEntityPage = postRepository.findAllByUserIdAndState(userId, Common.PUBLIC, pageable);
+    public Page<PostOutput> getPostsByUserId(Long searchUserId, String accessToken, Pageable pageable){
+        Long userId = tokenHelper.getUserIdFromToken(accessToken);
+        List<String> states = new ArrayList<>(List.of(Common.PUBLIC));
+
+        if (Objects.isNull(searchUserId)) {
+            searchUserId = userId;
+            states.add(Common.PRIVATE);
+        } else if (friendMapRepository.existsByUserId1AndUserId2(userId, searchUserId)
+                || friendMapRepository.existsByUserId1AndUserId2(searchUserId, userId)) {
+            states.add(Common.PRIVATE);
+        }
+
+        Page<PostEntity> postEntityPage = postRepository.findAllByUserIdAndStateIn(searchUserId, states, pageable);
         if (Objects.isNull(postEntityPage) || postEntityPage.isEmpty()) {
             return Page.empty();
         }
-        UserDto userEntity = uaaServiceProxy.getUsersBy(List.of(userId)).getFirst();
+        UserDto userEntity = uaaServiceProxy.getUsersBy(List.of(searchUserId)).getFirst();
         Map<Long, UserDto> userEntityMap = new HashMap<>();
         userEntityMap.put(userEntity.getId(), userEntity);
-        return setHasLikeForPosts(tokenHelper.getUserIdFromToken(accessToken), mapResponsePostPage(postEntityPage, userEntityMap));
+        return setHasLikeForPosts(userId, mapResponsePostPage(postEntityPage, userEntityMap));
     }
 
     @Transactional(readOnly = true)
@@ -93,6 +107,16 @@ public class GetPostService {
         Map<Long, UserDto> userEntityMap = new HashMap<>();
         userEntityMap.put(userEntity.getId(), userEntity);
         return setHasLikeForPosts(userId, mapResponsePostPage(postEntityPage, userEntityMap));
+    }
+
+    @Transactional(readOnly = true)
+    public Page<PostImageMapEntity> getImagesOfPost(String accessToken, Long userId, Pageable pageable){
+        Long currentUserId = tokenHelper.getUserIdFromToken(accessToken);
+        if(userId == null){
+            userId = currentUserId;
+        }
+        Page<PostImageMapEntity> postImageMapEntityPage = postImageMapRepository.findAllByUserId(userId,pageable);
+        return postImageMapEntityPage;
     }
 
     public Page<PostOutput> mapResponsePostPage(Page<PostEntity> postEntityPage, Map<Long, UserDto> userEntityMap) {

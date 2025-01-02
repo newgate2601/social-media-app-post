@@ -1,4 +1,4 @@
-package com.example.social_media_app_post.feign.dto;
+package com.example.social_media_app_post.dto.group;
 
 import lombok.*;
 
@@ -7,10 +7,9 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class UserDto {
+public class GroupMemberOutPut {
     private Long id;
     private String fullName;
     private String imageUrl;
-    private String description;
-    private String imageBackground;
+    private String role;
 }

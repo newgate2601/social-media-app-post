@@ -2,6 +2,8 @@ package com.example.social_media_app_post.controller;
 
 import com.example.social_media_app_post.dto.post.CreatePostInput;
 import com.example.social_media_app_post.dto.post.PostOutput;
+import com.example.social_media_app_post.entity.PostImageMapEntity;
+import com.example.social_media_app_post.service.post.CloudinaryHelper;
 import com.example.social_media_app_post.service.post.GetPostService;
 import com.example.social_media_app_post.service.post.UpdatePostService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -11,20 +13,26 @@ import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("api/v1/post")
 @AllArgsConstructor
-@CrossOrigin
 public class PostController {
     private final UpdatePostService updatePostService;
     private final GetPostService getPostService;
+
+    @Operation(summary = "Tạo ảnh")
+    @PostMapping("/upload-image")
+    public String uploadImage(@RequestPart(name = "images") MultipartFile multipartFile){
+        return CloudinaryHelper.uploadAndGetFileUrl(multipartFile);
+    }
 
     @Operation(summary = "Đăng bài viết")
     @PostMapping("/post")
     public void creatPost(@RequestHeader("Authorization") String accessToken,
                           @RequestBody @Valid CreatePostInput createPostInput) {
-        updatePostService.creatPost(accessToken, createPostInput);
+        updatePostService.createPost(accessToken, createPostInput);
     }
 
     @Operation(summary = "Sửa bài viết")
@@ -56,18 +64,10 @@ public class PostController {
         return getPostService.getPostsOfFriends(accessToken, pageable);
     }
 
-    @Operation(summary = "Lấy post của bạn bè")
-    @GetMapping("/list/post-friend")
-    public Page<PostOutput> getPostOfFriendProfile(@RequestHeader("Authorization") String accessToken,
-                                                   @RequestParam Long friendId,
-                                                   @ParameterObject Pageable pageable){
-        return getPostService.getPostOfListFriend(accessToken, friendId, pageable);
-    }
-
     @Operation(summary = "Lấy post của người lạ")
     @GetMapping("/list/post-user")
     public Page<PostOutput> getPostOfUserProfile(@RequestHeader("Authorization") String accessToken,
-                                                 @RequestParam Long userId,
+                                                 @RequestParam(required = false) Long userId,
                                                  @ParameterObject Pageable pageable){
         return getPostService.getPostsByUserId(userId, accessToken, pageable);
 
@@ -79,4 +79,14 @@ public class PostController {
                                       @ParameterObject Pageable pageable){
         return getPostService.getMyPosts(accessToken, pageable);
     }
+
+    @Operation(summary = "Danh sách ảnh của người dùng ")
+    @GetMapping("/group-images")
+    public Page<PostImageMapEntity> getGroupPosts(
+            @RequestHeader("Authorization") String accessToken,
+            @RequestParam(required = false) Long userId,
+            @ParameterObject Pageable pageable){
+        return getPostService.getImagesOfPost(accessToken, userId, pageable);
+    }
 }
+
