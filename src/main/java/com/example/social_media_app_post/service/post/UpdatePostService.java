@@ -59,6 +59,7 @@ public class UpdatePostService {
                 postImageMapEntity.setCreatedAt(LocalDateTime.now());
 
                 postImageMapRepository.save(postImageMapEntity);
+
             }
         }
     }
