@@ -17,21 +17,14 @@ import org.springframework.web.bind.annotation.*;
 public class GroupController {
     private final GroupService groupService;
 
-    @DeleteMapping("/join-cancel")
-    @Operation(summary = "Từ chối/ chấp nhận cho vào nhóm")
-    public void cancelRequestJoinGroup(@RequestHeader("Authorization") String accessToken,
-                                       @RequestParam Long groupId){
-        groupService.cancelRequestJoinGroup(accessToken, groupId);
-    }
-
-    @PostMapping("/join-accept")
-    @Operation(summary = "Từ chối/ chấp nhận cho vào nhóm")
-    public void acceptJoinGroup(@RequestHeader("Authorization") String accessToken,
-                                @RequestParam Boolean isAccept,
-                                @RequestParam Long groupId,
-                                @RequestParam Long userId){
-        groupService.acceptJoinGroup(accessToken,isAccept,groupId,userId);
-    }
+        @PostMapping("/join-accept")
+        @Operation(summary = "Từ chối/ chấp nhận cho vào nhóm")
+        public void acceptJoinGroup(@RequestHeader("Authorization") String accessToken,
+                                    @RequestParam Boolean isAccept,
+                                    @RequestParam Long groupId,
+                                    @RequestParam Long userId){
+            groupService.acceptJoinGroup(accessToken,isAccept,groupId,userId);
+        }
 
     @Operation(summary = "Danh sách yêu cầu vào nhóm")
     @GetMapping("/join-list")
@@ -41,12 +34,12 @@ public class GroupController {
         return groupService.getAllRequestJoins(accessToken, groupId, pageable);
     }
 
-    @Operation(summary = "Yêu cầu vào nhóm")
-    @PostMapping("/join-request")
-    public void requestJoinGroup(@RequestHeader("Authorization") String accessToken,
-                                 @RequestParam Long groupId){
-        groupService.requestJoinGroup(accessToken, groupId);
-    }
+        @Operation(summary = "Yêu cầu vào nhóm")
+        @PostMapping("/join-request")
+        public void requestJoinGroup(@RequestHeader("Authorization") String accessToken,
+                                     @RequestParam Long groupId){
+            groupService.requestJoinGroup(accessToken, groupId);
+        }
 
     @Operation(summary = "Sửa thông tin nhóm")
     @PutMapping
