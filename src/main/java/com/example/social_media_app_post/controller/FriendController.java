@@ -30,6 +30,7 @@ public class FriendController {
                                                  @RequestHeader(value = Common.AUTHORIZATION) String accessToken,
                                                  @ParameterObject Pageable pageable){
         return getFriendService.findUsers(search, accessToken, pageable);
+
     }
 
     @Operation(summary = "Hủy lời mời kết bạn bên phía người gửi")
