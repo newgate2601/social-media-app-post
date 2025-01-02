@@ -33,24 +33,24 @@ public class FriendController {
 
     }
 
-    @Operation(summary = "Hủy lời mời kết bạn bên phía người gửi")
-    @DeleteMapping("/delete-request/user")
-    public void deleteAddFriendRequest( @RequestHeader("Authorization") String accessToken,
-                                        @RequestParam Long receiverId) {
-        updateFriendsService.deleteSendFriendRequest(accessToken, receiverId);
-    }
+        @Operation(summary = "Hủy lời mời kết bạn bên phía người gửi")
+        @DeleteMapping("/delete-request/user")
+        public void deleteAddFriendRequest( @RequestHeader("Authorization") String accessToken,
+                                            @RequestParam Long receiverId) {
+            updateFriendsService.deleteSendFriendRequest(accessToken, receiverId);
+        }
 
-    @Operation(summary = "Đồng ý lời mời kết bạn")
-    @PostMapping("/accept")
-    public void acceptAddFriendRequest(@RequestParam Long id, @RequestHeader("Authorization") String accessToken) {
-        updateFriendsService.acceptAddFriendRequest(id, accessToken);
-    }
+        @Operation(summary = "Đồng ý lời mời kết bạn")
+        @PostMapping("/accept")
+        public void acceptAddFriendRequest(@RequestParam Long id, @RequestHeader("Authorization") String accessToken) {
+            updateFriendsService.acceptAddFriendRequest(id, accessToken);
+        }
 
-    @Operation(summary = "Gửi yêu cầu kết bạn")
-    @PostMapping("/add")
-    public void sendRequestAddFriends(@RequestParam Long id, @RequestHeader("Authorization") String accessToken) {
-        updateFriendsService.sendRequestAddFriend(id, accessToken);
-    }
+        @Operation(summary = "Gửi yêu cầu kết bạn")
+        @PostMapping("/add")
+        public void sendRequestAddFriends(@RequestParam Long id, @RequestHeader("Authorization") String accessToken) {
+            updateFriendsService.sendRequestAddFriend(id, accessToken);
+        }
 
     @Operation(summary = "lấy thông tin cá nhân")
     @GetMapping("/friend-information")
@@ -88,9 +88,9 @@ public class FriendController {
         updateFriendsService.deleteFriend(friendId, accessToken);
     }
 
-    @Operation(summary = "Từ chối lời mời kết bạn")
-    @DeleteMapping("/reject")
-    void rejectAddFriendRequest(@RequestParam Long senderId, @RequestHeader("Authorization") String accessToken){
-        updateFriendsService.rejectAddFriendRequest(senderId, accessToken);
-    }
+        @Operation(summary = "Từ chối lời mời kết bạn")
+        @DeleteMapping("/reject")
+        void rejectAddFriendRequest(@RequestParam Long senderId, @RequestHeader("Authorization") String accessToken){
+            updateFriendsService.rejectAddFriendRequest(senderId, accessToken);
+        }
 }

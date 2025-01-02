@@ -50,11 +50,11 @@ public class UpdateFriendsService {
     private final UaaServiceProxy uaaServiceProxy;
     private final PushServiceClient pushService;
 
-    @Transactional
-    public void rejectAddFriendRequest(Long sendId, String token) {
-        Long receiveId = tokenHelper.getUserIdFromToken(token);
-        friendRequestRepository.deleteByReceiverIdAndSenderId(receiveId, sendId);
-    }
+        @Transactional
+        public void rejectAddFriendRequest(Long sendId, String token) {
+            Long receiveId = tokenHelper.getUserIdFromToken(token);
+            friendRequestRepository.deleteByReceiverIdAndSenderId(receiveId, sendId);
+        }
 
 
     @Transactional
@@ -64,29 +64,29 @@ public class UpdateFriendsService {
         friendMapRepository.deleteAllByUserId1AndUserId2(friendId, userId);
     }
 
-    @Transactional
-    public void deleteSendFriendRequest(String accessToken, Long receiverId) {
-        Long userId = tokenHelper.getUserIdFromToken(accessToken);
-        if (Boolean.FALSE.equals(friendRequestRepository.existsBySenderIdAndReceiverId(userId, receiverId))) {
-            throw new RuntimeException(Common.RECORD_NOT_FOUND);
-        }
-        friendRequestRepository.deleteByReceiverIdAndSenderId(receiverId, userId);
+        @Transactional
+        public void deleteSendFriendRequest(String accessToken, Long receiverId) {
+            Long userId = tokenHelper.getUserIdFromToken(accessToken);
+            if (Boolean.FALSE.equals(friendRequestRepository.existsBySenderIdAndReceiverId(userId, receiverId))) {
+                throw new RuntimeException(Common.RECORD_NOT_FOUND);
+            }
+            friendRequestRepository.deleteByReceiverIdAndSenderId(receiverId, userId);
 
-    }
+        }
 
     @Transactional
     public void sendRequestAddFriend(Long receiveId, String accessToken) {
-        Long senderId = tokenHelper.getUserIdFromToken(accessToken);
-        if (receiveId.equals(senderId)) {
-            throw new RuntimeException(Common.ACTION_FAIL);
-        }
-        // Neu da gui yeu cau roi thi k dc gui nua -- notDone
-        FriendRequestEntity friendRequestEntity = FriendRequestEntity.builder()
-                .senderId(senderId)
-                .receiverId(receiveId)
-                .createdAt(LocalDateTime.now())
-                .build();
-        friendRequestRepository.save(friendRequestEntity);
+            Long senderId = tokenHelper.getUserIdFromToken(accessToken);
+            if (receiveId.equals(senderId)) {
+                throw new RuntimeException(Common.ACTION_FAIL);
+            }
+            // Neu da gui yeu cau roi thi k dc gui nua -- notDone
+            FriendRequestEntity friendRequestEntity = FriendRequestEntity.builder()
+                    .senderId(senderId)
+                    .receiverId(receiveId)
+                    .createdAt(LocalDateTime.now())
+                    .build();
+            friendRequestRepository.save(friendRequestEntity);
         CompletableFuture.runAsync(() -> {
             rtcServiceProxy.createEventNotification(
                     EventNotificationRequest.builder()
@@ -129,18 +129,18 @@ public class UpdateFriendsService {
     @Transactional
     public void acceptAddFriendRequest(Long senderId,  // user sent friend request
                                        String token) { // user accept
-        Long receiverId = tokenHelper.getUserIdFromToken(token);
-        if (Boolean.FALSE.equals(friendRequestRepository.existsBySenderIdAndReceiverId(senderId, receiverId))) {
-            throw new RuntimeException(Common.ACTION_FAIL);
-        }
+            Long receiverId = tokenHelper.getUserIdFromToken(token);
+            if (Boolean.FALSE.equals(friendRequestRepository.existsBySenderIdAndReceiverId(senderId, receiverId))) {
+                throw new RuntimeException(Common.ACTION_FAIL);
+            }
 
-        friendMapRepository.save(FriendMapEntity.builder()
-                .userId1(receiverId)
-                .userId2(senderId)
-                .build()
-        );
+            friendMapRepository.save(FriendMapEntity.builder()
+                    .userId1(receiverId)
+                    .userId2(senderId)
+                    .build()
+            );
 
-        friendRequestRepository.deleteByReceiverIdAndSenderId(receiverId, senderId);
+            friendRequestRepository.deleteByReceiverIdAndSenderId(receiverId, senderId);
 
         Map<Long, UserDto> users = uaaServiceProxy.getUsersBy(List.of(receiverId, senderId)).stream()
                 .collect(Collectors.toMap(UserDto::getId, Function.identity()));
