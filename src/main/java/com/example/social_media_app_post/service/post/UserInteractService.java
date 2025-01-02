@@ -106,6 +106,7 @@ public class UserInteractService {
         Integer likeCount = postEntity.getLikeCount();
         postEntity.setLikeCount(++likeCount);
         postRepository.save(postEntity);
+
     }
 
     @Transactional

@@ -88,6 +88,7 @@ public class UpdatePostService {
             throw new RuntimeException(Common.ACTION_FAIL);
         }
         postRepository.delete(postEntity);
+
     }
 
     @Transactional
