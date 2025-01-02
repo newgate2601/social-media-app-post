@@ -70,6 +70,7 @@ public class PostController {
                                                  @RequestParam Long userId,
                                                  @ParameterObject Pageable pageable){
         return getPostService.getPostsByUserId(userId, accessToken, pageable);
+
     }
 
     @Operation(summary = "Danh sách bài viết (của mình)")
