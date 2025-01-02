@@ -62,6 +62,7 @@ public class UpdateFriendsService {
         Long userId = tokenHelper.getUserIdFromToken(accessToken);
         friendMapRepository.deleteAllByUserId1AndUserId2(userId, friendId);
         friendMapRepository.deleteAllByUserId1AndUserId2(friendId, userId);
+
     }
 
     @Transactional
